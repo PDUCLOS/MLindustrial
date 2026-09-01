@@ -1,0 +1,93 @@
+# Hierarchie: machine (banc d'essai physique) -> test_session (condition de fonctionnement)
+#             -> bearing (roulement, entite de split) -> signal (enregistrement)
+#
+# Un "roulement" (bearing) appartient a UNE machine et peut etre mesure sous PLUSIEURS
+# sessions (conditions). Le split train/test se fait toujours au niveau bearing_id.
+
+machines:
+  - id: paderborn_kat_rig
+    source: paderborn
+    application_type: bearing_test_rig
+    name: "Modular bearing test rig - KAt-DataCenter"
+    description: >
+      Banc d'essai modulaire Universite de Paderborn (moteur asynchrone, arbre de couple,
+      module de charge radiale, roulement teste en position d'essai). 32 roulements 6203
+      testes sur ce meme banc, sous 4 conditions de fonctionnement.
+    citation: "Lessmeier, C.; Kimotho, J. K.; Zimmer, D.; Sextro, W. - KAt-DataCenter, Paderborn University"
+    sessions:
+      - id: N15_M07_F10
+        rotational_speed_rpm: 1500
+        load_torque_nm: 0.7
+        radial_force_n: 1000
+      - id: N09_M07_F10
+        rotational_speed_rpm: 900
+        load_torque_nm: 0.7
+        radial_force_n: 1000
+      - id: N15_M01_F10
+        rotational_speed_rpm: 1500
+        load_torque_nm: 0.1
+        radial_force_n: 1000
+      - id: N15_M07_F04
+        rotational_speed_rpm: 1500
+        load_torque_nm: 0.7
+        radial_force_n: 400
+    channels: [vibration, current_1, current_2]
+    sampling_rate_hz: 64000
+    measurement_duration_s: 4
+    measurements_per_bearing_session: 20
+
+  - id: xjtu_sy_rig
+    source: xjtu_sy
+    application_type: bearing_test_rig
+    name: "XJTU-SY rolling bearing accelerated life test rig"
+    description: >
+      Banc run-to-failure, 15 roulements LDK UER204 repartis sur 3 conditions de charge/vitesse
+      (5 roulements par condition), vibration horizontale + verticale.
+    citation: "Wang, Lei, Li, Li - IEEE Trans. Reliability, 69(1), 2020. DOI 10.1109/TR.2018.2882682"
+    sessions:
+      - id: condition_1
+        rotational_speed_rpm: 2100
+        radial_force_kn: 12
+      - id: condition_2
+        rotational_speed_rpm: 2250
+        radial_force_kn: 11
+      - id: condition_3
+        rotational_speed_rpm: 2400
+        radial_force_kn: 10
+    channels: [horizontal, vertical]
+    sampling_rate_hz: 25600
+    note: "run-to-failure : signaux non decoupes en mesures fixes, voir minute-index par roulement"
+
+  # Stubs a completer lors de la recuperation effective de ces sources.
+  - id: nasa_ims_rig
+    source: nasa_ims
+    application_type: bearing_test_rig
+    name: "Rexnord ZA-2115 double row bearing test rig (NASA IMS)"
+    description: >
+      3 essais run-to-failure distincts sur le meme type de banc, 4 roulements par essai.
+      A traiter comme 3 sessions/machines distinctes (jeux de roulements differents).
+    citation: "Lee, Qiu, Yu, Lin, Rexnord Technical Services - NASA Prognostics Data Repository"
+    sessions: []
+    status: TODO_a_completer_apres_telechargement
+
+  - id: cwru_testbed
+    source: cwru
+    application_type: bearing_test_rig
+    name: "Reliance Electric 2hp motor testbed (CWRU)"
+    description: "Sanity check uniquement - ne pas utiliser pour resultats finaux (voir docs/brief_projet.md piege #3)."
+    sessions: []
+    status: TODO_a_completer_apres_telechargement
+
+  - id: mafaulda_simulator
+    source: mafaulda
+    application_type: bearing_test_rig
+    name: "SpectraQuest Machinery Fault Simulator (MAFAULDA)"
+    sessions: []
+    status: TODO_a_completer_apres_telechargement
+
+  - id: femto_pronostia_rig
+    source: femto_st
+    application_type: bearing_test_rig
+    name: "PRONOSTIA platform (FEMTO-ST)"
+    sessions: []
+    status: TODO_a_completer_apres_telechargement

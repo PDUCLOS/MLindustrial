@@ -1,0 +1,134 @@
+id: urn:aas:phaseA:M1
+id_short: M1_Moteur_asynchrone_75_kW_VFD
+asset_kind: Instance
+submodels:
+- id: urn:aas:phaseA:M1:submodel:Nameplate
+  id_short: Nameplate
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/Nameplate/3/0
+  properties:
+  - id_short: MachineID
+    value_type: xs:string
+    value: M1
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineID
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.M1.MachineID
+  - id_short: Label
+    value_type: xs:string
+    value: Moteur asynchrone 75 kW VFD
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Label
+    confidence: uncalibrated
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.label
+  - id_short: MachineType
+    value_type: xs:string
+    value: electric_motor
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineType
+    confidence: confirmed
+    source_citation: configs/application_types.yaml (taxonomie ISO 20816-3) -- etendu
+      pour belt_conveyor et mechanical_press (hors ISO)
+  - id_short: SubType
+    value_type: xs:string
+    value: induction_4poles_VFD
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.subtype
+  - id_short: PowerKW
+    value_type: xs:float
+    value: 75.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Power
+    confidence: inferred
+    source_citation: 'Ordre de grandeur typique moteur asynchrone industriel 75 kW
+      (4 poles, 50 Hz). Source : `docs/architecture_usine_simulation.md` §3 (table
+      M1). PAS une valeur catalogue constructeur precise -- a remplacer par la plaque
+      signaletique reelle au commissioning.
+
+      '
+  - id_short: NominalSpeedRPM
+    value_type: xs:float
+    value: 1500.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/NominalSpeed
+    confidence: confirmed
+    source_citation: '50 Hz / 4 poles = 1500 rpm (synchronisme). Source : IEC 60034-1
+      (machines electriques tournantes -- vitesses synchrones). Vitesse rotor reelle
+      legerement inferieure (glissement 3-5%) -- negligee en Phase A, modelisee ulterieurement
+      en SA3.
+
+      '
+  - id_short: VFDRangeMinRPM
+    value_type: xs:float
+    value: 750.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Plage typique variateur de frequence ABB ACS580 / Siemens G120
+      : 10-200% de la frequence nominale (50 Hz). Source : catalogue constructeur
+      ABB ACS580 (section "Speed range"), 2024. Non specifiquement verifie pour 75
+      kW.
+
+      '
+  - id_short: VFDRangeMaxRPM
+    value_type: xs:float
+    value: 3000.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Plage typique variateur de frequence ABB ACS580 / Siemens G120
+      : 10-200% de la frequence nominale (50 Hz). Source : catalogue constructeur
+      ABB ACS580 (section "Speed range"), 2024. Non specifiquement verifie pour 75
+      kW.
+
+      '
+  - id_short: Bearing_drive_end
+    value_type: xs:string
+    value: '6309'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Roulements typiques moteur asynchrone 75 kW : 6309 (DE) + 6308
+      (NDE). Source : `docs/architecture_usine_simulation.md` §3 table M1. Geometrie
+      6309/6308 PAS encore dans `configs/bearing_geometry.yaml` : a ajouter en SB2
+      (Stream B). En Phase A, on documente les REFERENCES catalogue, pas la geometrie
+      detaillee -- les frequences BPFO/BPFI seront calculees apres extension du catalogue
+      roulements.
+
+      '
+  - id_short: Bearing_non_drive_end
+    value_type: xs:string
+    value: '6308'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Roulements typiques moteur asynchrone 75 kW : 6309 (DE) + 6308
+      (NDE). Source : `docs/architecture_usine_simulation.md` §3 table M1. Geometrie
+      6309/6308 PAS encore dans `configs/bearing_geometry.yaml` : a ajouter en SB2
+      (Stream B). En Phase A, on documente les REFERENCES catalogue, pas la geometrie
+      detaillee -- les frequences BPFO/BPFI seront calculees apres extension du catalogue
+      roulements.
+
+      '
+- id: urn:aas:phaseA:M1:submodel:ConditionMonitoring
+  id_short: ConditionMonitoring
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/ConditionMonitoring/1/0
+  properties:
+  - id_short: PrioritySensors
+    value_type: xs:string
+    value: S1_acc_IEPE_100mVg@palier DE, radial horizontal (BPFO/BPFI defect detection
+      (signature mecanique)) | S2_TC_courant@phase U, en sortie variateur (MCSA —
+      barres rotor cassees, excentricite (signature electrique)) | S3_codeur_incremental@arbre
+      moteur, extremite NDE (Vitesse reelle pour tracking d'ordre en VFD)
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.priority_sensors
+  - id_short: TargetedFaults
+    value_type: xs:string
+    value: broken_rotor_bars [iso=5.4.2, prop=P3] sig='sidebands autour de fs=50 Hz
+      dans courant (MCSA)' | eccentricity [iso=5.4.x, prop=P3] sig='raies a fr (1x)
+      et 2x fr dans vibration + courant' | bearing_outer_race [iso=5.1.2, prop=P2]
+      sig='raies BPFO + harmoniques dans enveloppe vibration'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Modes de defaut et signatures : `docs/architecture_usine_simulation.md`
+      §3 (table M1) + `docs/theorie_reference.md` §4 (MCSA).
+
+      '
+  - id_short: GlobalConfidence
+    value_type: xs:string
+    value: uncalibrated
+    semantic_id: ''
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.confidence_global

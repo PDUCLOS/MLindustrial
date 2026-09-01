@@ -1,0 +1,13 @@
+data/raw/
+data/interim/
+data/processed/
+mlruns/
+postgres_data/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.git/
+reports/figures/

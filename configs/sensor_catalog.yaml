@@ -1,0 +1,453 @@
+# Catalogue de capteurs industriels — Phase A Factory Twin
+#
+# Date : 2026-09-01
+# Source primaire :
+#   - `docs/CDC_projet.md` §3.2 (Stream B — SB1 Catalogue de capteurs)
+#   - `docs/architecture_usine_simulation.md` §2 (Couche 2 — Instrumentation)
+#   - `docs/sensor_economics_reference.md` (cout / TCO par capteur)
+#
+# Statut : SB1 — squelette structurel avec 11 categories de capteurs
+# industriels courants. Chaque entree porte `confidence` et `citation`
+# conformement a la regle "0 mock" du projet.
+#
+# Convention de nommage des `id` : `S{n}_{type}_{variante}` en snake_case
+# -- utilise tel quel comme cle de reference dans
+# `configs/usine_phase_a.yaml` (champ `priority_sensors[].id`).
+#
+# Le champ `signal_type` suit la nomenclature IEC 61131-9 / IO-Link :
+#   - `analog_iepe` : sortie analogique type IEPE (Integrated Electronics
+#     Piezo-Electric), 4-20 mA equivalent en tension (100 mV/g typique)
+#   - `analog_voltage` : sortie analogique 0-10 V ou +-10 V
+#   - `analog_current_loop` : 4-20 mA
+#   - `digital_io` : tout ou rien (TOR)
+#   - `digital_bus` : bus numerique (IO-Link, Modbus RTU, CAN, etc.)
+#   - `digital_modulating` : PWM / frequence variable
+
+sensor_catalog:
+
+  # -----------------------------------------------------------------------
+  # 1. Accelerometre IEPE 100 mV/g (le plus courant en maintenance predictive)
+  # -----------------------------------------------------------------------
+  - id: "S1_acc_IEPE_100mVg"
+    label: "Accelerometre IEPE 100 mV/g"
+    category: "vibration"
+    signal_type: "analog_iepe"
+    measurement_range:
+      min: 0
+      max: 50  # g (pic)
+      unit: "g"
+    sensitivity_typ: 100  # mV/g (valeur typique constructeur)
+    sensitivity_tolerance_pct: 10  # +/- 10% (spec constructeur typique)
+    frequency_range_hz:
+      min: 0.5
+      max: 10000  # 10 kHz -- suffisant pour spectres enveloppe
+    frequency_range_citation: >
+      Plage de frequence typique acc. IEPE industriel usage general :
+      0.5 Hz a 10 kHz. Source : fiche technique PCB Piezotronics 352C33
+      (acc. IEPE general purpose 100 mV/g, 0.5-10kHz +-5%).
+    accuracy_typ: 5  # % de la sensibilite nominale
+    accuracy_citation: "Fiche constructeur PCB 352C33 : tolerance sensibilite +/-5% (souvent 10% sur versions low-cost)"
+    typical_supplier:
+      - "PCB Piezotronics (US)"
+      - "Kistler (CH)"
+      - "Dytran Instruments (US)"
+      - "Brüel & Kjær / HBK (DK)"
+    typical_models:
+      - "PCB 352C33"
+      - "Kistler 8763B"
+      - "Dytran 3035B"
+    typical_unit_price_eur: 250  # ordre de grandeur installation moyenne
+    typical_unit_price_citation: >
+      docs/sensor_economics_reference.md : ~200-400 EUR pour acc. IEPE
+      100 mV/g qualite industrielle. Valeur 250 EUR : mediane indicative.
+    confidence: inferred
+    detected_faults:
+      - "BPFO/BPFI/BSF/FTF defect (envelope analysis)"
+      - "Imbalance (1x fr)"
+      - "Misalignment (2x fr)"
+      - "Looseness (harmoniques 1x/2x/3x fr)"
+    citation: >
+      Source primaire : `docs/architecture_usine_simulation.md` §2 (S1)
+      et `docs/sensor_economics_reference.md` section accelerometres
+      IEPE. Specifications techniques : fiche constructeur PCB 352C33.
+
+  # -----------------------------------------------------------------------
+  # 2. Accelerometre IEPE haute frequence (50 kHz) pour engrenages / GMF
+  # -----------------------------------------------------------------------
+  - id: "S1_acc_IEPE_100mVg_HF"
+    label: "Accelerometre IEPE 100 mV/g haute frequence (50 kHz)"
+    category: "vibration"
+    signal_type: "analog_iepe"
+    measurement_range:
+      min: 0
+      max: 50
+      unit: "g"
+    sensitivity_typ: 100
+    sensitivity_tolerance_pct: 10
+    frequency_range_hz:
+      min: 1
+      max: 50000  # 50 kHz -- requis pour GMF engrenages helicoidaux rapides
+    frequency_range_citation: >
+      GMF helicoidal 2 etages avec arbre rapide a 1500 rpm : 25 dents
+      (ordre de grandeur) -> GMF = 25 * 25 = 625 Hz. Pour capter
+      4x-5x GMF + sidebands, il faut au moins 5-10 kHz. 50 kHz laisse
+      de la marge pour variantes plus rapides. Source : theorie GMF
+      (docs/theorie_reference.md §3).
+    accuracy_typ: 5
+    typical_supplier:
+      - "PCB Piezotronics"
+      - "Kistler"
+      - "Dytran"
+    typical_models:
+      - "PCB 352C33"  # variante 50 kHz
+      - "Kistler 8763B"
+    typical_unit_price_eur: 400
+    typical_unit_price_citation: >
+      Variante haute frequence : 300-600 EUR (capteur specifique, pas
+      substitut direct du modele general purpose). Source :
+      `docs/sensor_economics_reference.md`.
+    confidence: inferred
+    detected_faults:
+      - "GMF defect (engrenages)"
+      - "BPFO haute frequence"
+    citation: "docs/architecture_usine_simulation.md §2 S1 variante + theorie_reference.md §3"
+
+  # -----------------------------------------------------------------------
+  # 3. Accelerometre MEMS numerique (low-cost, industriel emergent)
+  # -----------------------------------------------------------------------
+  - id: "S1b_acc_MEMS_numerique"
+    label: "Accelerometre MEMS numerique industriel"
+    category: "vibration"
+    signal_type: "digital_bus"  # SPI / I2C / IO-Link
+    measurement_range:
+      min: -16
+      max: 16  # g (plage typique MEMS industriel)
+      unit: "g"
+    sensitivity_typ: null  # sortie numerique directe (g codee en 16 bits)
+    frequency_range_hz:
+      min: 0
+      max: 6800  # 6.8 kHz typique MEMS industriel haut de gamme
+    frequency_range_citation: >
+      MEMS industriel (ex. ADXL356, ST IIS3DHHC) : bande passante
+      0.5-6.8 kHz. Inferieure a IEPE pour analyse GMF, suffisante
+      pour imbalance/misalignment + certaines signatures BPFO roulements
+      lents. Source : fiche constructeur Analog Devices ADXL356.
+    accuracy_typ: 3
+    typical_supplier:
+      - "Analog Devices"
+      - "STMicroelectronics"
+      - "Bosch Sensortec"
+    typical_models:
+      - "Analog Devices ADXL356"
+      - "ST IIS3DHHC"
+      - "Bosch BMA490L"
+    typical_unit_price_eur: 50
+    typical_unit_price_citation: >
+      MEMS numerique : 30-100 EUR. Source : `docs/sensor_economics_reference.md`
+      et fiche constructeur ADI (distributeurs RS/Farnell).
+    confidence: inferred
+    detected_faults:
+      - "Imbalance (1x fr)"
+      - "Misalignment (2x fr)"
+      - "BPFO roulements lents (limite haute frequence)"
+    citation: "docs/sensor_economics_reference.md section MEMS + theorie_reference.md"
+
+  # -----------------------------------------------------------------------
+  # 4. Transformateur de courant (TC) pour mesure MCSA
+  # -----------------------------------------------------------------------
+  - id: "S2_TC_courant"
+    label: "Transformateur de courant (TC) pour MCSA"
+    category: "electrical"
+    signal_type: "analog_voltage"  # sortie conditionnee +/- 10 V ou 4-20 mA
+    measurement_range:
+      min: 0
+      max: 200  # A (selon modele)
+      unit: "A"
+    sensitivity_typ: null  # ratio de transformation
+    frequency_range_hz:
+      min: 0
+      max: 100000  # 100 kHz -- requis pour MCSA (signature barres rotor a fs+/-s*fr)
+    frequency_range_citation: >
+      MCSA -- analyse du courant stator necessite une bande passante
+      jusqu'a plusieurs kHz autour de fs (50 Hz) pour capter les
+      sidebands de glissement (s*fr ~ 1-3 Hz autour de fs). 100 kHz
+      est conservateur (certains capteurs MCSA reels vont jusqu'a 1 MHz
+      pour des defauts tres precoces). Source : theorie_reference.md §4.
+    accuracy_typ: 1
+    accuracy_citation: "TC classe 1 typique (IEC 61869-2)"
+    typical_supplier:
+      - "LEM (CH)"
+      - "Schneider Electric"
+      - "ABB"
+      - "Carlo Gavazzi"
+    typical_models:
+      - "LEM CKSR 15-NP"  # deja utilise sur banc Paderborn (src/data/units.py)
+      - "LEM LF 205-S"
+      - "Schneider METSECT5"
+    typical_unit_price_eur: 150
+    typical_unit_price_citation: "docs/sensor_economics_reference.md"
+    confidence: confirmed
+    detected_faults:
+      - "Broken rotor bars (MCSA)"
+      - "Stator winding fault"
+      - "Eccentricity (mixed eccentricity, sidebands fs+/-fr)"
+      - "Supply imbalance"
+    citation: >
+      Source : `src/data/units.py::SENSOR_REGISTRY` (LEM CKSR 15-NP
+      deja reference sur Paderborn, confidence "inferred" pour
+      l'unite .mat vide, "confirmed" pour le materiel). Specifications
+      electriques : IEC 61869-2 (TC classe 1) + theorie MCSA.
+
+  # -----------------------------------------------------------------------
+  # 5. Pt100 RTD (sonde temperature resistive)
+  # -----------------------------------------------------------------------
+  - id: "S4_Pt100_RTD"
+    label: "Pt100 RTD (sonde de temperature resistive)"
+    category: "temperature"
+    signal_type: "analog_resistive"  # Pt100 = resistance variable, conditionnee par transmetteur
+    measurement_range:
+      min: -50
+      max: 400
+      unit: "degC"
+    sensitivity_typ: 0.385  # ohm/degC (100 ohm @ 0 degC, 138.5 ohm @ 100 degC)
+    frequency_range_hz: null  # DC (mesure statique)
+    accuracy_typ: 0.3  # degC (classe A)
+    accuracy_citation: "Pt100 classe A : +/- 0.15 + 0.002*|T| degC (IEC 60751)"
+    typical_supplier:
+      - "WIKA (DE)"
+      - "Endress+Hauser"
+      - "IFM Electronic"
+    typical_models:
+      - "WIKA TC10"
+      - "IFM TN2xxx"
+    typical_unit_price_eur: 80
+    typical_unit_price_citation: "docs/sensor_economics_reference.md"
+    confidence: confirmed
+    detected_faults:
+      - "Echauffement roulements (lubrification defaillante)"
+      - "Surcharge moteur (au-dela de la classe thermique)"
+      - "Cavitation pompe (elevation T° locale)"
+    citation: >
+      Specifications electriques : IEC 60751 (Pt100 -- resistance
+      platine 100 ohm @ 0 degC). Source materiel : fiches WIKA / IFM.
+      Source projet : `docs/architecture_usine_simulation.md` §2 S4.
+
+  # -----------------------------------------------------------------------
+  # 6. Thermocouple type K (alternative Pt100, plus haute temperature)
+  # -----------------------------------------------------------------------
+  - id: "S4b_thermocouple_K"
+    label: "Thermocouple type K (NiCr-NiAl)"
+    category: "temperature"
+    signal_type: "analog_voltage"  # ~40 uV/degC, conditionne
+    measurement_range:
+      min: -200
+      max: 1200
+      unit: "degC"
+    sensitivity_typ: 0.041  # mV/degC (approx a 250 degC)
+    frequency_range_hz: null
+    accuracy_typ: 2.2  # degC (classe 1, IEC 60584)
+    accuracy_citation: "IEC 60584-2 classe 1 : +/- 1.5 degC ou 0.4%*|T|"
+    typical_supplier:
+      - "WIKA"
+      - "Omega Engineering"
+      - "Endress+Hauser"
+    typical_models:
+      - "WIKA TC100"
+    typical_unit_price_eur: 60
+    typical_unit_price_citation: "docs/sensor_economics_reference.md"
+    confidence: confirmed
+    detected_faults:
+      - "Echauffement haut de gamme (compresseur, four)"
+    citation: "IEC 60584-2 + docs/architecture_usine_simulation.md §2 S4 variante"
+
+  # -----------------------------------------------------------------------
+  # 7. Pressostat / transmetteur de pression
+  # -----------------------------------------------------------------------
+  - id: "S5_pressostat_pression_refoulement"
+    label: "Transmetteur de pression hydraulique (0-25 bar)"
+    category: "pressure"
+    signal_type: "analog_current_loop"  # 4-20 mA typique
+    measurement_range:
+      min: 0
+      max: 25
+      unit: "bar"
+    sensitivity_typ: null  # sortie 4-20 mA
+    frequency_range_hz:
+      min: 0
+      max: 1000  # suffisant pour fluctuations de pression (cavitation)
+    accuracy_typ: 0.5  # % de la pleine echelle
+    accuracy_citation: "IEC 62828-2 (transmetteurs pression)"
+    typical_supplier:
+      - "IFM Electronic"
+      - "WIKA"
+      - "Endress+Hauser"
+      - "Festo"
+    typical_models:
+      - "IFM PN7"
+      - "WIKA A-10"
+    typical_unit_price_eur: 200
+    typical_unit_price_citation: "docs/sensor_economics_reference.md"
+    confidence: inferred
+    detected_faults:
+      - "Cavitation pompe (chute de pression)"
+      - "Fuite interne compresseur (baisse pression refoulement)"
+      - "Filtre colmate (perte de charge anormale)"
+    citation: "docs/architecture_usine_simulation.md §2 S5 + fiche IFM PN7"
+
+  # -----------------------------------------------------------------------
+  # 8. Debitmetre (electromagnetique ou ultrason)
+  # -----------------------------------------------------------------------
+  - id: "S7_debitmetre"
+    label: "Debitmetre electromagnetique (ou ultrason)"
+    category: "flow"
+    signal_type: "analog_current_loop"  # 4-20 mA, ou HART
+    measurement_range:
+      min: 0
+      max: 100  # m3/h (selon diametre tuyauterie)
+      unit: "m3/h"
+    sensitivity_typ: null
+    frequency_range_hz:
+      min: 0
+      max: 100
+    accuracy_typ: 1
+    accuracy_citation: "ISO 4064 (classe 1 ou 2 selon diametre)"
+    typical_supplier:
+      - "Endress+Hauser (Promag)"
+      - "Siemens (SITRANS)"
+      - "Krohne"
+    typical_models:
+      - "Endress+Hauser Promag P100"
+      - "Siemens SITRANS F M"
+    typical_unit_price_eur: 1500
+    typical_unit_price_citation: >
+      Debitmetre electromagnetique industriel DN50-100 : 1000-2000 EUR.
+      Source : `docs/sensor_economics_reference.md` (plus cher que les
+      autres categories -- justifie par la technolo EM + certification).
+    confidence: inferred
+    detected_faults:
+      - "Usure pompe (debit nominal non atteint)"
+      - "Fuite reseau (debit aval < debit amont)"
+    citation: "ISO 4064 + docs/architecture_usine_simulation.md §2 S5 variante"
+
+  # -----------------------------------------------------------------------
+  # 9. Codeur incremental (vitesse de rotation / position)
+  # -----------------------------------------------------------------------
+  - id: "S3_codeur_incremental"
+    label: "Codeur incremental (10000 ppr)"
+    category: "rotational_speed"
+    signal_type: "digital_pulses"  # signaux A/B quadrature, RS422 ou HTL
+    measurement_range:
+      min: 0
+      max: 12000  # rpm (selon modele)
+      unit: "rpm"
+    sensitivity_typ: null  # pulses per revolution
+    ppr_typ: 10000  # pulses per revolution (haute resolution)
+    frequency_range_hz:
+      min: 0
+      max: 200000  # limite par freq. max du codeur (200 kHz / 10000 ppr = 1200 rpm -> ok pour variateur)
+    accuracy_typ: 0.01  # deg (resolution)
+    typical_supplier:
+      - "Heidenhain"
+      - "Sick"
+      - "Baumer"
+      - "IFM Electronic"
+    typical_models:
+      - "Heidenhain ROD 486"
+      - "Sick DFS60"
+      - "IFM RN6022"
+    typical_unit_price_eur: 350
+    typical_unit_price_citation: "docs/sensor_economics_reference.md"
+    confidence: confirmed
+    detected_faults:
+      - "Tracking d'ordre en VFD (pas une detection de defaut -- sert au demoulage)"
+    citation: >
+      Source : `docs/architecture_usine_simulation.md` §2 S3 + fiche
+      Heidenhain ROD 486. Convention quadrature A/B, RS422, 10000 ppr
+      -- resolution suffisante pour tracking d'ordre en VFD (jusqu'a
+      ~3000 rpm sans diviseur).
+
+  # -----------------------------------------------------------------------
+  # 10. Capteur acoustique (emission acoustique, AE)
+  # -----------------------------------------------------------------------
+  - id: "S8_acoustique_emission"
+    label: "Capteur emission acoustique (AE, 50-400 kHz)"
+    category: "acoustic_emission"
+    signal_type: "analog_voltage"  # sortie conditionnee (peak/RMS)
+    measurement_range:
+      min: 0
+      max: 100  # dBae (AE, decibels reference 1 uV)
+      unit: "dBae"
+    sensitivity_typ: null  # varie selon transducteur (large bande)
+    frequency_range_hz:
+      min: 50000
+      max: 400000  # 50-400 kHz -- bande AE
+    frequency_range_citation: >
+      Emission acoustique pour detection precoce fissures : bande
+      typique 50-400 kHz. Source : norme ASTM E1106 + theorie AE.
+    accuracy_typ: 3
+    typical_supplier:
+      - "Mistras Group (US)"
+      - "Physical Acoustics"
+      - "Kistler"
+    typical_models:
+      - "Mistras WD"
+      - "Kistler 8152B"
+    typical_unit_price_eur: 800
+    typical_unit_price_citation: >
+      AE qualite industrielle : 500-1500 EUR (transducteur seul,
+      sans systeme d'acquisition). Source : `docs/sensor_economics_reference.md`.
+    confidence: inferred
+    detected_faults:
+      - "Fissure naissante engrenage (avant propagation macro)"
+      - "Fissure couronne roulement (precurseur BPFO)"
+      - "Cavitation debutante (signature large bande)"
+    citation: "ASTM E1106 + docs/architecture_usine_simulation.md §2 S5 variante AE"
+
+  # -----------------------------------------------------------------------
+  # 11. Tachymetre / capteur de vitesse sans contact
+  # -----------------------------------------------------------------------
+  - id: "S9_tachymetre_laser"
+    label: "Tachymetre laser (mesure vitesse sans contact)"
+    category: "rotational_speed"
+    signal_type: "digital_pulses"  # une impulsion par tour (1 ppr)
+    measurement_range:
+      min: 1
+      max: 250000  # rpm
+      unit: "rpm"
+    sensitivity_typ: null
+    ppr_typ: 1  # 1 impulsion par tour (autrement dit, frequence de rotation)
+    frequency_range_hz:
+      min: 0
+      max: 5000
+    accuracy_typ: 0.05  # % de la lecture
+    typical_supplier:
+      - "Monarch Instrument"
+      - "Lutron"
+      - "Compact Instrument"
+    typical_models:
+      - "Monarch ACT-3B"
+    typical_unit_price_eur: 400
+    typical_unit_price_citation: "docs/sensor_economics_reference.md"
+    confidence: inferred
+    detected_faults:
+      - "Mesure vitesse de reference (synchronisation multi-capteurs)"
+    citation: "docs/architecture_usine_simulation.md §2 S3 variante sans contact"
+
+# ===========================================================================
+# Annexe : categories NON couvertes explicitement par ce catalogue Phase A
+# ===========================================================================
+# Les categories suivantes sont listees dans le CDC §3.2 (SB1) comme
+# "a completer" et restent a ajouter ulterieurement si le besoin
+# apparait (Phase B ou ulterieur) :
+#
+# - Capteur hygrometrique (humidite relative, pour corrosion M2 pompe)
+# - Capteur de niveau (float / capacitif, pour reservoir hydraulique)
+# - Capteur de vibration sans fil (wireless, type IFM VTV122) -- pour
+#   machines tournantes mobiles (robots, AGV) en Phase C
+# - Camera thermique / imagerie IR (cartographie T° -- alternative aux
+#   thermocouples multipoints)
+# - Analyseur de reseau electrique (power quality, harmoniques secteur)
+#   -- pour P3 electrique avance (au-dela de la simple MCSA)
+#
+# L'extension ulterieure se fera dans le respect de la regle "0 mock" :
+# chaque nouvelle entree portera `confidence` + `citation` explicites.

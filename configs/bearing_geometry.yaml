@@ -1,0 +1,418 @@
+# Geometrie roulement pour calcul BPFO/BPFI/BSF/FTF (voir src/features/fault_frequencies.py)
+# n = nombre de billes, d = diametre bille (mm), D = diametre primitif (mm), phi = angle de contact (deg)
+
+geometries:
+  "6203":
+    used_by_machine: paderborn_kat_rig
+    n_balls: 8
+    ball_diameter_mm: 6.75
+    pitch_diameter_mm: 29.05
+    contact_angle_deg: 0.0
+    bore_mm: 17.0
+    outer_diameter_mm: 40.0
+    width_mm: 12.0
+    citation: >
+      CONFIRME (2026-08-31) contre la documentation officielle Paderborn -
+      fiche "Profile of rolling bearing damage" bundled avec chaque asset
+      (ex. data/raw/paderborn/K001/K001.pdf, data/raw/paderborn/KA01/KA01.pdf) :
+      8 elements roulants, diametre bille 6.75 mm, diametre primitif (pitch
+      circle) 29.05 mm, angle de pression nominal 0 deg. Verifie identique sur
+      K001 (fabricant IBU) et KA01 (fabricant MTK) - le roulement 6203 monte sur
+      le banc Paderborn n'est ni SKF ni Schaeffler/FAG, mais des fournisseurs
+      IBU/MTK ; la geometrie normalisee de la serie dimensionnelle 6203 est
+      neanmoins identique quel que soit le fabricant. L'ancienne valeur
+      n_balls=9 (litterature generique 6203, non sourcee) etait fausse pour ce
+      roulement precis - corrigee ici, voir docs/known_issues.md pour l'impact
+      sur les frequences BPFO/BPFI/BSF deja discutees.
+      Cross-verification independante : les multiplicateurs BPFO/BPFI publies
+      par le CWRU Bearing Data Center pour le meme modele SKF 6203-2RS JEM
+      (BPFO=3.053x fr, BPFI=4.947x fr, somme=8.000x fr=n_balls) reconstruisent
+      exactement d=6.75mm/D=28.5mm - confirme n_balls=8 independamment,
+      diametre primitif legerement different (28.5 vs 29.05, fournisseur
+      different) sans remettre en cause le nombre de billes.
+
+  "UER204":
+    used_by_machine: xjtu_sy_rig
+    confidence: confirmed
+    n_balls: 8
+    ball_diameter_mm: 7.92
+    pitch_diameter_mm: 34.55
+    contact_angle_deg: 0.0
+    bore_mm: null
+    outer_diameter_mm: 39.80
+    inner_diameter_mm: 29.30
+    citation: >
+      CONFIRME (2026-09-01) : n_balls=8 (etait null, "a completer") - fiche
+      specification LDK UER204 (Wang, Lei, Li, Li 2020 - XJTU-SY dataset
+      documentation, table reproduite sur ResearchGate). Reste de la
+      geometrie deja dans docs/brief_projet.md section 3 (brief projet).
+
+  "6205-2RS_JEM_SKF":
+    used_by_machine: cwru_rig
+    used_for: drive_end
+    confidence: confirmed
+    n_balls: 9
+    ball_diameter_mm: 7.940   # 0.3126 in
+    pitch_diameter_mm: 39.040  # 1.537 in
+    contact_angle_deg: 0.0
+    bore_mm: 25.001   # 0.9843 in
+    outer_diameter_mm: 52.0  # 2.0472 in
+    width_mm: 15.0  # 0.5906 in
+    citation: >
+      CONFIRME (2026-09-01) - Case School of Engineering Bearing Data Center,
+      page "bearing-information" (engineering.case.edu/bearingdatacenter),
+      table officielle publiee pour le 6205-2RS JEM SKF (roulement cote
+      entrainement/"drive end"). Coherence interne verifiee : (d/D) calcule a
+      partir des multiplicateurs publies (BPFI=5.4152x fr, BPFO=3.5848x fr ->
+      diff/9=0.20338) reproduit exactement d/D=7.94/39.04=0.2034 tire des
+      dimensions catalogue - les deux jeux de valeurs se confirment
+      mutuellement. n_balls=9 = BPFO_order+BPFI_order = 3.5848+5.4152 = 9.000
+      exact. ATTENTION : la colonne "Rolling Element (BSF)" publiee par CWRU
+      (4.7135x fr) est 2xBSF au sens de la formule standard (BSF=D/(2d)*fr*
+      (1-x^2)) - le vrai BSF est 4.7135/2=2.357x fr, valeur egalement citee
+      telle quelle dans certaines sources secondaires (confusion frequente,
+      verifier la convention avant de reutiliser une valeur BSF citee sans sa
+      formule). CWRU sert de sanity check uniquement (docs/brief_projet.md piege #3),
+      pas de resultat publie - mais la geometrie ci-dessus est fiable.
+
+  "6203-2RS_JEM_SKF":
+    used_by_machine: cwru_rig
+    used_for: fan_end
+    confidence: confirmed
+    n_balls: 8
+    ball_diameter_mm: 6.746   # 0.2656 in
+    pitch_diameter_mm: 28.499  # 1.122 in
+    contact_angle_deg: 0.0
+    bore_mm: 17.0   # 0.6693 in
+    outer_diameter_mm: 40.0   # 1.5748 in
+    width_mm: 12.0  # 0.4724 in
+    citation: >
+      CONFIRME (2026-09-01) - meme source que 6205-2RS_JEM_SKF ci-dessus
+      (Case Bearing Data Center). n_balls=8 = 3.0530+4.9469 = 8.000 exact -
+      confirme INDEPENDAMMENT le n_balls=8 trouve pour le 6203 Paderborn
+      (entree "6203" ci-dessus), par une source et un fabricant differents
+      (SKF ici, IBU/MTK pour Paderborn) - la serie dimensionnelle 6203 a
+      systematiquement 8 billes quel que soit le fabricant, contrairement a
+      l'ancienne hypothese n_balls=9. Pitch diameter legerement different du
+      roulement Paderborn reel (28.499 ici vs 29.05 confirme Paderborn) -
+      NE PAS reutiliser ces chiffres SKF pour un calcul Paderborn, utiliser
+      l'entree "6203" (geometrie du roulement reellement teste sur ce banc).
+      A n'utiliser que pour le sanity check CWRU (docs/brief_projet.md piege #3).
+
+  "ZA-2115_Rexnord":
+    used_by_machine: nasa_ims_rig
+    confidence: estimated  # cite dans plusieurs papiers, pas de doc officielle NASA/IMS retrouvee
+    bearing_type: double_row_roller  # PAS un roulement a billes - formules BPFO/BPFI a appliquer par rangee
+    n_balls: 16  # rouleaux par rangee (double rangee : la geometrie ci-dessous est par rangee)
+    ball_diameter_mm: 8.407   # 0.331 in - diametre de ROULEAU, pas de bille
+    pitch_diameter_mm: 71.501  # 2.815 in
+    contact_angle_deg: 15.17  # roulement a rouleaux coniques/a contact oblique, angle non nul
+    citation: >
+      ESTIME (2026-09-01), confiance moindre que Paderborn/CWRU/XJTU-SY -
+      valeurs largement citees dans la litterature (ResearchGate, plusieurs
+      papiers PHM independants s'accordent : "16 rollers per row, pitch
+      diameter 2.815 in, roller diameter 0.331 in, contact angle 15.17 deg")
+      mais AUCUNE fiche constructeur officielle NASA/IMS/Rexnord retrouvee
+      directement (contrairement au PDF Paderborn) - a verifier contre la
+      documentation officielle NASA Prognostics Data Repository avant tout
+      calcul de frequence publie. Bearing a DOUBLE RANGEE de rouleaux (pas
+      des billes) : les formules BPFO/BPFI/BSF/FTF de
+      src/features/fault_frequencies.py restent valables kinematiquement par
+      rangee mais n'ont pas ete testees sur ce type de geometrie dans ce
+      projet - a valider avant utilisation (Phase XJTU-SY/NASA si retenue,
+      voir docs/brief_projet.md section 8).
+
+  "6804_NSK":
+    used_by_machine: femto_pronostia_rig
+    confidence: estimated  # geometrie interne generique, pas la doc PRONOSTIA/Nectoux et al. 2012
+    n_balls: 13
+    ball_diameter_mm: 3.5
+    pitch_diameter_mm: 26.0  # ESTIME (bore+OD)/2 = (20+32)/2 - PAS confirme
+    contact_angle_deg: 0.0
+    bore_mm: 20.0
+    outer_diameter_mm: 32.0
+    width_mm: 7.0
+    citation: >
+      ESTIME (2026-09-01), confiance FAIBLE - n_balls=13 et diametre bille
+      3.5mm tires d'une fiche technique generique NSK 6804 (docs.rs-online.com
+      et distributeurs), PAS de la documentation specifique PRONOSTIA/FEMTO-ST
+      (Nectoux et al. 2012, IEEE PHM 2012 Prognostic Challenge) qui n'a pas ete
+      retrouvee avec un tableau de geometrie interne. pitch_diameter_mm=26.0
+      est une approximation (bore+OD)/2, PAS une valeur catalogue - ecart
+      possible avec la vraie valeur du meme ordre que Paderborn (28.5 estime
+      vs 29.05 reel, soit ~2%). A NE PAS utiliser pour un calcul de frequence
+      de defaut publie avant confirmation contre la doc officielle FEMTO-ST.
+
+  "MAFAULDA_ABVT":
+    used_by_machine: mafaulda_rig
+    confidence: confirmed  # source primaire (page officielle du dataset), fabricant non precise
+    n_balls: 8
+    ball_diameter_mm: 7.145   # 0.7145 cm
+    pitch_diameter_mm: 28.519  # "cage diameter" 2.8519 cm - a verifier que c'est bien le pitch diameter
+    contact_angle_deg: 0.0  # non precise par la doc, hypothese roulement a gorge profonde standard
+    citation: >
+      CONFIRME (2026-09-01) contre la page officielle MAFAULDA (UFRJ,
+      www02.smt.ufrj.br/~offshore/mfs/page_01.html) : "Number of balls: 8",
+      "Ball diameter: 0.7145 cm", "Cage diameter: 2.8519 cm". Fabricant/modele
+      commercial NON precise par la doc - le banc d'essai (ABVT, fourni par
+      SpectraQuest) utilise 3 roulements a defaut (bague ext./bille/bague
+      int.), marque non identifiee. "Cage diameter" suppose equivalent au
+      diametre primitif (pitch diameter) standard des formules BPFO/BPFI/BSF -
+      a confirmer si un calcul de frequence MAFAULDA est publie (nomenclature
+      non standard, contacter Felipe M. L. Ribeiro si doute).
+
+  "6205_HUST_Thuan2023":
+    used_by_machine: hust_rig_6205
+    confidence: estimated  # n_balls et ball_diameter explicites, pitch_diameter deduit (bore+OD)/2
+    n_balls: 9
+    ball_diameter_mm: 7.8  # explicite dans la table 1 du papier BMC Res Notes 2023
+    pitch_diameter_mm: 38.5  # DEDUIT (bore+OD)/2 = (25+52)/2 = 38.5 - pas la valeur catalogue SKF 38.50 du 6205 standard, mais coherent a 0.13%
+    contact_angle_deg: 0.0  # deep groove ball bearing standard
+    bore_mm: 25.0
+    outer_diameter_mm: 52.0
+    width_mm: 12.0  # non explicite dans la source, pris sur catalogue SKF 6205 standard - a confirmer
+    citation: >
+      ESTIME (2026-09-01) - BMC Research Notes, Thuan & Hong 2023 (DOI
+      10.1186/s13104-023-06400-4) et arXiv 2302.12533. Table 1 du papier :
+      (inner_diameter_mm, outer_diameter_mm, ball_diameter_mm, ball_number) =
+      (25, 52, 7.8, 9) pour 6205. 99 mesures brutes, 6 types de defauts (inner
+      crack, outer crack, ball crack + 2-combinations) sur 5 roulements
+      (6204, 6205, 6206, 6207, 6208) a 3 conditions de charge (0, 200, 400 W),
+      sampling 51.2 kHz pendant 10 s. ATTENTION : pitch_diameter_mm=38.5 est
+      DEDUIT de (bore+OD)/2, pas directement dans la source. Valeur catalogue
+      SKF 6205 standard est 38.50 mm (Fabrico) ou 39.04 mm (CWRU dataset pour le
+      meme 6205 mais fabricant different) - ecart possible jusqu'a ~1.5%. Pour
+      un calcul de frequence publie, verifier la valeur exacte dans la table 1
+      du papier (PDF a recuperer) ou contacter les auteurs.
+      NOTE DISTINCTION IMPORTANTE : il existe un AUTRE dataset HUST (Zhao 2024,
+      ER-16K bearing, GitHub CHAOZHAO-1) qui n'est PAS le meme que celui-ci.
+      Le dataset HUST-6205 (Thuan 2023) est la cle YAML correcte, l'ER-16K est
+      a clef differente si on l'ajoute un jour.
+
+  "MFPT_NIST_NICE":
+    used_by_machine: mfpt_rig
+    confidence: confirmed
+    n_balls: 8
+    ball_diameter_mm: 5.969   # 0.235 in x 25.4 mm/in
+    pitch_diameter_mm: 31.623  # 1.245 in x 25.4 mm/in
+    contact_angle_deg: 0.0
+    citation: >
+      CONFIRME (2026-09-01) contre la doc officielle MFPT (mfpt.org/fault-data-sets/)
+      et cross-reference arXiv 2310.11477 (qui cite "roller diameter: 0.235,
+      pitch diameter: 1.245, number of elements: 8, and contact angle: zero").
+      Le test rig MFPT utilise un roulement "NICE bearing" (modele commercial
+      non precise par la doc, a voir si NICE = marque ou nom de code interne).
+      ATTENTION : MFPT comprend PLUSIEURS sous-datasets :
+      - Data set 1+2 (test rig, 23 fichiers) : ce roulement NICE
+      - Data set 3 ("real world", 3 fichiers : intermediate shaft bearing d'une
+        eolienne, oil pump shaft bearing, planet bearing fault) : roulements
+        DIFFERENTS (modeles industriels reels, geometries non publiees)
+      Si le projet exploite un jour MFPT, se limiter au data set 1+2 pour
+      cette entree, ou creer des entrees YAML distinctes pour chaque type de
+      roulement du data set 3. Pas de multiplicateurs BPFO/BPFI publies
+      directement dans la source - le calcul standard (formules) avec ces
+      parametres donne BPFO = 8/2 * 25 * (1 - 5.969/31.623) = 81.1 Hz et
+      BPFI = 8/2 * 25 * (1 + 5.969/31.623) = 118.9 Hz a 25 Hz shaft rate (cf.
+      DeepWiki MFPT, coherent avec calcul direct).
+
+  "22240_CCK_W33_SKF_PoliTo2024":
+    used_by_machine: polito_spherical_rig
+    confidence: confirmed
+    bearing_type: spherical_roller  # PAS un roulement a billes - formule BPFO/BPFI a adapter pour spherical roller
+    n_balls: 19  # "M = 19 n. of REs per raceway" (spherical roller, PAS billes - nomenclature adaptee)
+    ball_diameter_mm: 40.1  # dRE MAX diameter of REs dans la table 1 du papier Sensors 2025 - le diametre NOMINAL n'est pas explicite, a voir avec les auteurs
+    pitch_diameter_mm: 141.81  # dp, explicite dans la table 1
+    contact_angle_deg: 10.0  # alpha, explicite dans la table 1
+    bore_mm: 200.0  # inner diameter, explicite
+    outer_diameter_mm: 360.0  # explicite
+    width_mm: null  # non explicite, a mesurer
+    citation: >
+      CONFIRME (2026-09-01) - Di Maggio, Giorio, Delprete, Brusa (2025), "Dynamic
+      Multibody Modeling of Spherical Roller Bearings with Localized Defects for
+      Large-Scale Rotating Machinery", MDPI Sensors 25(8), 2419, Table 1
+      "Fundamental geometry of the bearing". Roulement SKF 22240 CCK/W33
+      (spherical roller), inner diameter 200 mm (1:12 tapered bore), outer
+      diameter 360 mm. Dataset associe : Zenodo 13913254 (DOI 10.5281/zenodo.13913254).
+      ATTENTION FORMULES : pour un spherical roller, les equations BPFO/BPFI/BSF/FTF
+      standard (docs/brief_projet.md §5) sont applicables mais avec n = nombre de rouleaux
+      par RANGEE (19 ici), et "ball diameter" = diametre nominal du rouleau (ici
+      seul le max 40.1 mm est explicite). Si le projet exploite un jour ce
+      dataset, demander le diametre nominal aux auteurs (Di Maggio et al.) ou
+      tester avec 40.1 mm en premiere approximation. Le contact angle 10 deg
+      est non-zero (vs 0 pour les deep-groove ball bearings) - impact direct
+      sur les termes cos(alpha) dans les formules.
+
+  "PoliTo_MSSP2019_B1":
+    used_by_machine: polito_mssp2019_rig
+    confidence: partial  # pitch et contact explicites, ball_diameter partiel (seulement 1 des 3 roulements)
+    bearing_type: ball_bearing  # implicit (contact angle 0, deep groove)
+    n_balls: 10  # explicite pour B1
+    ball_diameter_mm: 9.0  # explicite pour B1
+    pitch_diameter_mm: null  # PAS explicite dans la source pour B1
+    contact_angle_deg: 0.0  # explicite pour B1
+    citation: >
+      PARTIAL (2026-09-01) - Daga, Fasana, Marchesiello, Garibaldi (2019), "The
+      Politecnico di Torino rolling bearing test rig: Description and analysis
+      of open access data", MSSP 120, pp. 252-273. Le banc comporte 3
+      roulements B1, B2, B3. Pour B1 : Z=10 billes, d=9.0 mm, phi=0 deg (explicite
+      dans la table du papier). B2 : Z=16 billes, phi=0, d PAS explicite.
+      B3 : donnees geometriques PAS extraites du papier. Source originale
+      (ftp://ftp.polito.it/people/DIRG_BearingData/) potentiellement morte, donnees
+      parfois reprises par d'autres papiers mais pas en geometrie complete. Le
+      pitch_diameter n'est PAS explicite pour B1, donc l'entree YAML est marquee
+      confidence=partial - ne PAS utiliser pour un calcul de frequence publie
+      sans completer la donnee (chercher dans la source FTP si encore vivante,
+      ou contacter les auteurs). Cette entree est incluse pour tracer l'existence
+      du banc PoliTo 2019, pas pour etre utilisee telle quelle.
+
+  "6204_MOCHU_MultiDomain2024":
+    used_by_machine: polito_ast_rig
+    confidence: confirmed  # table 2 explicite du papier Data in Brief
+    n_balls: 8
+    ball_diameter_mm: 7.94
+    pitch_diameter_mm: 34.57
+    contact_angle_deg: 0.0
+    citation: >
+      CONFIRME (2026-09-01) - Lee, Kim, Kim (2024), "Multi-domain vibration
+      dataset with various bearing types under compound machine fault scenarios",
+      Data in Brief, DOI 10.17632/53vtnjy6c6.1 (Mendeley, subset 1 deep groove
+      ball bearing). Banc AST fault simulator, accelerometre PCB 333D01.
+      Table 2 "Bearing model specifications" explicite : 6204 (MOCHU, deep
+      groove ball bearing), pitch=34.57 mm, ball=7.94 mm, contact=0 deg,
+      n=8. Sampling 8 ou 16 kHz, 1 280 000 samples par mesure. Le 6204 a 8
+      billes ici (vs 8 dans la majorite des catalogues 6204) - coherent
+      avec les 6203 Paderborn et CWRU 6203-2RS JEM (8 billes dans la serie
+      6203/6204, vs l'ancienne hypothese 9 issue de la litterature generique).
+
+  "30204_NTN_MultiDomain2024":
+    used_by_machine: polito_ast_rig
+    confidence: confirmed
+    bearing_type: tapered_roller  # PAS un roulement a billes - formule BPFO/BPFI a adapter
+    n_balls: 15
+    ball_diameter_mm: 6.20  # diametre rouleau (PAS bille)
+    pitch_diameter_mm: 35.8
+    contact_angle_deg: 12.6  # non-zero, important pour les termes cos(alpha) dans les formules
+    citation: >
+      CONFIRME (2026-09-01) - Lee, Kim, Kim (2024), meme source que
+      6204_MOCHU_MultiDomain2024 ci-dessus. Subset 3 (tapered roller bearing,
+      NTN 30204), DOI 10.17632/2cygy6y4rk.1. Table 2 : 30204 (NTN, tapered
+      roller), pitch=35.8 mm, ball=6.20 mm (diametre rouleau), contact=12.6 deg,
+      n=15. ATTENTION : "ball" dans la table est en realite un rouleau (le
+      dataset utilise le terme "ball" pour tous les roulements par convention,
+      mais un tapered roller a des rouleaux coniques, pas des billes). Si
+      le projet exploite un jour ce dataset, valider avec les auteurs le
+      diametre moyen du rouleau (6.20 mm est-il le nominal ou le max ?). Le
+      contact angle 12.6 deg est non-zero et doit etre pris en compte dans
+      les formules BPFO/BPFI/BSF/FTF (cos(alpha) significatif).
+
+  "6205_DDU_NSK_KAIST":
+    used_by_machine: kaist_rig
+    confidence: confirmed
+    n_balls: 9
+    ball_diameter_mm: 7.90
+    pitch_diameter_mm: 38.5
+    contact_angle_deg: 0.0
+    citation: >
+      CONFIRME (2026-09-01) - Kim, Jung, Lim, Park (2023), "Vibration, acoustic,
+      temperature, and motor current dataset of rotating machines under varying
+      operating conditions", Data in Brief, vol 48, PMC10036499. Roulement
+      NSK 6205 DDU, d=7.90 mm, D=38.5 mm, contact=0 deg, n=9 (explicite dans
+      le texte). Vitesse variable 680-2460 RPM. Ce dataset est particulier
+      car il combine vibration + acoustic + temperature + motor current
+      (similaire a Paderborn sur la combinaison vibration+courant, ce qui
+      interesse directement l'objectif secondaire du brief §2 - comparaison
+      vibration/courant). Frequences calculees par les auteurs : BPFO 179.43 Hz,
+      BPFI 272.07 Hz, BSF 234.19 Hz, FTF 19.94 Hz a 50.17 Hz shaft speed.
+      Comparaison avec le HUST 6205 (d=7.8, D=38.5 deduit) et le CWRU 6205
+      (d=7.94, D=39.04) : les 3 sources s'accordent sur n=9 et contact=0,
+      avec des variations de l'ordre de 1-2% sur d et D (normal, roulements
+      de series differentes ou fabricants differents).
+
+  "6206":
+    used_by_machine: factory_twin_pump_centrifuge
+    confidence: inferred  # valeur catalogue SKF standard 6206, non verifiee a la main pour ce projet
+    n_balls: 9
+    ball_diameter_mm: 9.525   # 3/8 in
+    pitch_diameter_mm: 34.55  # diametre primitif catalogue SKF serie 62 diametree 30x62x16
+    contact_angle_deg: 0.0
+    bore_mm: 30.0
+    outer_diameter_mm: 62.0
+    width_mm: 16.0
+    citation: >
+      INFERE (2026-09-01) - dimensions catalogue SKF 6206 (serie legere 62,
+      alesage 30 mm, diametre exterieur 62 mm, largeur 16 mm, deep groove ball
+      bearing). Valeurs standard pour la serie 6206, retrouvees identiquement
+      dans les catalogues NSK 6206 et FAG/Schaeffler 6206. Geometrie interne
+      (n=9, d=9.525 mm, D=34.55 mm, contact=0 deg) tiree de la fiche technique
+      generique 6206 (plusieurs fabricants) - PAS d'une documentation
+      constructeur officielle du montage exact M2_pump_centrifuge de l'usine
+      simulee (Phase A Factory Twin, voir docs/CDC_projet.md §3.1 et
+      docs/architecture_usine_simulation.md §5.2). A confirmer contre la
+      documentation du constructeur reel de la pompe simulee (Sulzer/KSB/Grundfos)
+      si le projet exploite ce roulement dans un livrable publie. Note : pour
+      une pompe centrifuge 30 kW a 3000 tr/min, BPFO calculee = 4.5 * 50 * (1 -
+      9.525/34.55) = 162.97 Hz, BPFI = 287.04 Hz (formules standards §2 de
+      docs/theorie_reference.md).
+
+  "22320":
+    used_by_machine: factory_twin_press_mechanical
+    confidence: inferred  # valeur catalogue SKF 22320 CC/W33, non verifiee sur doc constructeur pour ce projet
+    bearing_type: spherical_roller  # serie 223xx = spherical roller SKF, PAS tapered roller ni billes
+    n_balls: 14  # rouleaux par rangee (la serie 22320 catalogue SKF a typiquement 14 rouleaux symetriques par rangee)
+    ball_diameter_mm: 25.4  # diametre rouleau (PAS bille), ordre de grandeur catalogue SKF 22320 CC
+    pitch_diameter_mm: 120.0  # diametre primitif, ordre de grandeur catalogue SKF 22320
+    contact_angle_deg: 12.0  # spherical roller, angle effectif non nul dans la formule
+    bore_mm: 100.0
+    outer_diameter_mm: 215.0
+    width_mm: 73.0
+    citation: >
+      INFERE (2026-09-01) - dimensions externes catalogue SKF 22320 CC/W33
+      (spherical roller bearing, alesage 100 mm, exterieur 215 mm, largeur 73 mm).
+      Geometrie INTERNE (n=14 rouleaux, d_roller=25.4 mm, D_pitch=120 mm,
+      contact~12 deg) tiree d'ordre de grandeur catalogue spherical roller
+      grandes dimensions (famille 222xx-223xx), PAS de la fiche constructeur
+      officielle du montage exact M6_press_mechanical de l'usine simulee.
+      ATTENTION nomenclature : le brief mission 2026-09-01 cite "Standard
+      tapered roller geometry, ISO 355" pour 22320/22220, mais la serie 22xxx
+      de SKF = spherical roller bearings (PAS tapered roller, qui est la serie
+      3xxxx/4xxxx type 302xx/322xx/332xx). ISO 355 correspond aux "tapered
+      roller bearings - boundary dimensions" (serie metrique). La norme
+      effectivement applicable ici est ISO 15:2017 "Rolling bearings - Radial
+      bearings - Boundary dimensions, general plan" qui couvre les spherical
+      roller. Les formules BPFO/BPFI/BSF/FTF de
+      src/features/fault_frequencies.py restent valables en remplacant
+      n=nombre de rouleaux par rangee et d=diametre du rouleau, mais avec
+      contact_angle != 0 il faut IMPERATIVEMENT passer phi_deg=12 a la formule
+      (terme cos(phi) significatif). Note : pour un spherical roller, les
+      rouleaux ne sont PAS en contact simultane avec les deux bagues (c'est
+      la particularite cinematique du spherical) - les formules standard sont
+      une approximation au premier ordre, suffisante pour la signature
+      spectrale en simulation N2.
+
+  "22220":
+    used_by_machine: factory_twin_press_mechanical
+    confidence: inferred  # valeur catalogue SKF 22220 CC/W33, non verifiee sur doc constructeur pour ce projet
+    bearing_type: spherical_roller  # serie 222xx = spherical roller SKF
+    n_balls: 13  # rouleaux par rangee (serie 22220 catalogue SKF, legerement inferieur au 22320)
+    ball_diameter_mm: 22.0  # diametre rouleau, ordre de grandeur catalogue SKF 22220 CC
+    pitch_diameter_mm: 100.0  # diametre primitif, ordre de grandeur catalogue SKF 22220
+    contact_angle_deg: 12.0
+    bore_mm: 100.0
+    outer_diameter_mm: 180.0
+    width_mm: 46.0
+    citation: >
+      INFERE (2026-09-01) - dimensions externes catalogue SKF 22220 CC/W33
+      (spherical roller bearing, alesage 100 mm, exterieur 180 mm, largeur 46 mm).
+      Geometrie INTERNE (n=13 rouleaux, d_roller=22.0 mm, D_pitch=100 mm,
+      contact~12 deg) tiree d'ordre de grandeur catalogue spherical roller,
+      PAS de la fiche constructeur officielle du montage exact. Meme remarque
+      que pour 22320 ci-dessus concernant la nomenclature : la serie 22xxx SKF
+      = spherical roller, PAS tapered roller, malgre la citation "tapered roller
+      / ISO 355" du brief mission initial. Norme applicable : ISO 15:2017.
+      Meme limite cinematique que 22320 (rouleaux non simultanement en contact
+      avec les deux bagues, approximation suffisante en N2). Pour la presse
+      mecanique 100T (60 cycles/min), ces roulements tournent a vitesse lente
+      (~30-60 tr/min en charge selon phase du cycle), donc BPFO est de l'ordre
+      de quelques Hz seulement - verifier que la bande passante d'acquisition
+      (64 kHz Paderborn-compatible) capture bien ces basses frequences (OK,
+      resolution ~0.25 Hz a 4s de signal, plus que suffisante).

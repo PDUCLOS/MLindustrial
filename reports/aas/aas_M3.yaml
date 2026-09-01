@@ -1,0 +1,94 @@
+id: urn:aas:phaseA:M3
+id_short: M3_Reducteur_helicoidal_2_etages
+asset_kind: Instance
+submodels:
+- id: urn:aas:phaseA:M3:submodel:Nameplate
+  id_short: Nameplate
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/Nameplate/3/0
+  properties:
+  - id_short: MachineID
+    value_type: xs:string
+    value: M3
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineID
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.M1.MachineID
+  - id_short: Label
+    value_type: xs:string
+    value: Reducteur helicoidal 2 etages
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Label
+    confidence: uncalibrated
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.label
+  - id_short: MachineType
+    value_type: xs:string
+    value: gear_unit
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineType
+    confidence: confirmed
+    source_citation: configs/application_types.yaml (taxonomie ISO 20816-3) -- etendu
+      pour belt_conveyor et mechanical_press (hors ISO)
+  - id_short: SubType
+    value_type: xs:string
+    value: helical_2_stages
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.subtype
+  - id_short: NominalSpeedRPMInput
+    value_type: xs:float
+    value: 1500.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Ratio typique reducteur 2 etages helicoidaux 1500 -> 250 rpm
+      (ratio 6:1). Source : `docs/architecture_usine_simulation.md` §3 (table M5).
+      Ratio exact depend du reducteur reel -- a confirmer au commissioning.
+
+      '
+  - id_short: NominalSpeedRPMOutput
+    value_type: xs:float
+    value: 250.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Ratio typique reducteur 2 etages helicoidaux 1500 -> 250 rpm
+      (ratio 6:1). Source : `docs/architecture_usine_simulation.md` §3 (table M5).
+      Ratio exact depend du reducteur reel -- a confirmer au commissioning.
+
+      '
+  - id_short: Bearing_high_speed_shaft
+    value_type: xs:string
+    value: N_308
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M5
+  - id_short: Bearing_low_speed_shaft
+    value_type: xs:string
+    value: NJ_2310
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M5
+- id: urn:aas:phaseA:M3:submodel:ConditionMonitoring
+  id_short: ConditionMonitoring
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/ConditionMonitoring/1/0
+  properties:
+  - id_short: PrioritySensors
+    value_type: xs:string
+    value: S1_acc_IEPE_100mVg_HF@carter reducteur, proche HSS (GMF + BPFO detection
+      (50 kHz pour couvrir 4x-5x GMF helicoidal)) | S8_acoustique_emission@carter
+      reducteur (detection precoce fissures denture (AE haute frequence)) | S3_codeur_incremental@arbre
+      rapide (entree reducteur) (phase arbre rapide pour tracking d'ordre GMF)
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.priority_sensors
+  - id_short: TargetedFaults
+    value_type: xs:string
+    value: gear_tooth_defect [iso=None, prop=P2] sig='raies a GMF (gear mesh frequency)
+      + sidebands fr_arbre' | bearing_outer_race_HSS [iso=5.1.2, prop=P2] sig='raies
+      BPFO + harmoniques dans enveloppe' | misalignment [iso=None, prop=P2] sig='2x
+      fr dominant dans vibration axiale'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M5 + docs/theorie_reference.md
+      §3 (engrenages)
+  - id_short: GlobalConfidence
+    value_type: xs:string
+    value: uncalibrated
+    semantic_id: ''
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.confidence_global

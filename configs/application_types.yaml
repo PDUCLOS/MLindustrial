@@ -1,0 +1,51 @@
+# Taxonomie "type d'application" basee sur ISO 20816-3 (Mechanical vibration -
+# Measurement and evaluation of machine vibration - Part 3: Industrial
+# machinery with a power rating above 15 kW and operating speeds between
+# 120 r/min and 30 000 r/min). Remplace ISO 10816-3 (retiree, valeurs
+# numeriques inchangees).
+#
+# Categories couvertes par la norme : pompes centrifuges, moteurs/generateurs
+# electriques (induction et synchrones), ventilateurs/soufflantes (centrifuges
+# et axiaux), compresseurs centrifuges, groupes d'engrenages integres.
+#
+# groups I-IV : classification par puissance nominale + type de fondation,
+# determine les seuils de zone A/B/C/D (interpretabilite metier, brief section 5).
+# Non rempli ici (pas de puissance nominale documentee pour les bancs d'essai
+# publics) - a completer si une source future fournit ces donnees.
+
+application_types:
+  - code: electric_motor
+    label: "Moteur / generateur electrique"
+    iso_reference: "ISO 20816-3"
+    description: "Moteurs a induction ou synchrones, generateurs."
+
+  - code: centrifugal_pump
+    label: "Pompe centrifuge"
+    iso_reference: "ISO 20816-3"
+    description: "Pompes centrifuges industrielles."
+
+  - code: fan_blower
+    label: "Ventilateur / soufflante"
+    iso_reference: "ISO 20816-3"
+    description: "Ventilateurs et soufflantes centrifuges ou axiaux."
+
+  - code: centrifugal_compressor
+    label: "Compresseur centrifuge"
+    iso_reference: "ISO 20816-3"
+    description: "Compresseurs centrifuges."
+
+  - code: gear_unit
+    label: "Groupe d'engrenages"
+    iso_reference: "ISO 20816-3"
+    description: "Reducteurs/multiplicateurs integres a une ligne d'arbres."
+
+  - code: bearing_test_rig
+    label: "Banc d'essai roulement (laboratoire)"
+    iso_reference: null
+    description: >
+      Categorie hors ISO 20816-3 (pas une machine de production) : banc de
+      laboratoire dedie a l'etude du roulement lui-meme (Paderborn, XJTU-SY,
+      CWRU, NASA IMS...). Assimile fonctionnellement a un ensemble
+      moteur+roulement, mais garde une categorie distincte pour ne pas
+      pretendre a une classification ISO qui ne s'applique pas telle quelle
+      a un banc d'essai.

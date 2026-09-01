@@ -1,0 +1,54 @@
+# Mapping des 32 roulements Paderborn -> etat de sante / origine / localisation du defaut.
+#
+# Convention des codes (Lessmeier et al. 2016) :
+#   K0xx = sain (Kein Fehler)
+#   KA.. = defaut bague EXTERIEURE (Aussenring)
+#   KI..  = defaut bague INTERIEURE (Innenring)
+#   KB..  = defaut COMBINE bague int. + ext. (Beide)
+# L'origine (artificiel vs reel) depend du numero de code, pas de la lettre.
+#
+# SOURCE : reconstruit depuis la table de reference Lessmeier et al. 2016 (benchmark paper),
+# recoupe avec les comptages du brief (6 sains / 12 artificiels / 14 reels = 32, OK).
+# defect_method partiellement incertain -> A VERIFIER contre le PDF de documentation
+# livre avec le telechargement (data/raw/paderborn/) avant toute publication de resultat.
+
+machine: paderborn_kat_rig
+
+bearings:
+  # --- sains (6) ---
+  - {code: K001, health_state: healthy, defect_origin: na, defect_location: none}
+  - {code: K002, health_state: healthy, defect_origin: na, defect_location: none}
+  - {code: K003, health_state: healthy, defect_origin: na, defect_location: none}
+  - {code: K004, health_state: healthy, defect_origin: na, defect_location: none}
+  - {code: K005, health_state: healthy, defect_origin: na, defect_location: none}
+  - {code: K006, health_state: healthy, defect_origin: na, defect_location: none}
+
+  # --- defauts artificiels (12) ---
+  - {code: KA01, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: edm}
+  - {code: KA03, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: engraving}
+  - {code: KA05, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: engraving}
+  - {code: KA06, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: engraving}
+  - {code: KA07, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: drilling}
+  - {code: KA08, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: drilling}
+  - {code: KA09, health_state: faulty, defect_origin: artificial, defect_location: outer, defect_method: "drilling?_to_verify"}
+  - {code: KI01, health_state: faulty, defect_origin: artificial, defect_location: inner, defect_method: edm}
+  - {code: KI03, health_state: faulty, defect_origin: artificial, defect_location: inner, defect_method: engraving}
+  - {code: KI05, health_state: faulty, defect_origin: artificial, defect_location: inner, defect_method: engraving}
+  - {code: KI07, health_state: faulty, defect_origin: artificial, defect_location: inner, defect_method: drilling}
+  - {code: KI08, health_state: faulty, defect_origin: artificial, defect_location: inner, defect_method: drilling}
+
+  # --- defauts reels / vieillissement accelere (14) ---
+  - {code: KA04, health_state: faulty, defect_origin: real, defect_location: outer, defect_method: fatigue_pitting}
+  - {code: KA15, health_state: faulty, defect_origin: real, defect_location: outer, defect_method: fatigue_pitting}
+  - {code: KA16, health_state: faulty, defect_origin: real, defect_location: outer, defect_method: fatigue_pitting}
+  - {code: KA22, health_state: faulty, defect_origin: real, defect_location: outer, defect_method: fatigue_pitting}
+  - {code: KA30, health_state: faulty, defect_origin: real, defect_location: outer, defect_method: plastic_deform}
+  - {code: KI04, health_state: faulty, defect_origin: real, defect_location: inner, defect_method: fatigue_pitting}
+  - {code: KI14, health_state: faulty, defect_origin: real, defect_location: inner, defect_method: fatigue_pitting}
+  - {code: KI16, health_state: faulty, defect_origin: real, defect_location: inner, defect_method: fatigue_pitting}
+  - {code: KI17, health_state: faulty, defect_origin: real, defect_location: inner, defect_method: fatigue_pitting}
+  - {code: KI18, health_state: faulty, defect_origin: real, defect_location: inner, defect_method: fatigue_pitting}
+  - {code: KI21, health_state: faulty, defect_origin: real, defect_location: inner, defect_method: fatigue_pitting}
+  - {code: KB23, health_state: faulty, defect_origin: real, defect_location: both, defect_method: fatigue_pitting}
+  - {code: KB24, health_state: faulty, defect_origin: real, defect_location: both, defect_method: fatigue_pitting}
+  - {code: KB27, health_state: faulty, defect_origin: real, defect_location: both, defect_method: fatigue_pitting}

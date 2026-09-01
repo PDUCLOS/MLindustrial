@@ -1,0 +1,107 @@
+id: urn:aas:phaseA:M2
+id_short: M2_Pompe_hydraulique
+asset_kind: Instance
+submodels:
+- id: urn:aas:phaseA:M2:submodel:Nameplate
+  id_short: Nameplate
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/Nameplate/3/0
+  properties:
+  - id_short: MachineID
+    value_type: xs:string
+    value: M2
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineID
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.M1.MachineID
+  - id_short: Label
+    value_type: xs:string
+    value: Pompe hydraulique
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Label
+    confidence: uncalibrated
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.label
+  - id_short: MachineType
+    value_type: xs:string
+    value: centrifugal_pump
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineType
+    confidence: confirmed
+    source_citation: configs/application_types.yaml (taxonomie ISO 20816-3) -- etendu
+      pour belt_conveyor et mechanical_press (hors ISO)
+  - id_short: SubType
+    value_type: xs:string
+    value: centrifuge_30kW
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.subtype
+  - id_short: PowerKW
+    value_type: xs:float
+    value: 30.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Power
+    confidence: inferred
+    source_citation: '30 kW, ordre de grandeur typique pompe centrifuge industrielle
+      (cf. `docs/architecture_usine_simulation.md` §3, table M2).
+
+      '
+  - id_short: NominalSpeedRPM
+    value_type: xs:float
+    value: 3000.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/NominalSpeed
+    confidence: confirmed
+    source_citation: IEC 60034-1 (2 poles -> 3000 rpm @ 50 Hz synchronisme)
+  - id_short: VFDRangeMinRPM
+    value_type: xs:float
+    value: 2900.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Pompe centrifuge -- variation de vitesse limitee (2-3% autour
+      du nominal) sinon degradation NPSH et risque cavitation. Source : Karassik,
+      Messina, "Pump Handbook" 4th ed., McGraw-Hill.
+
+      '
+  - id_short: VFDRangeMaxRPM
+    value_type: xs:float
+    value: 3100.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Pompe centrifuge -- variation de vitesse limitee (2-3% autour
+      du nominal) sinon degradation NPSH et risque cavitation. Source : Karassik,
+      Messina, "Pump Handbook" 4th ed., McGraw-Hill.
+
+      '
+  - id_short: Bearing_drive_end
+    value_type: xs:string
+    value: '6206'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 'Roulements typiques pompe centrifuge 30 kW (cf. `docs/architecture_usine_simulation.md`
+      §3 M2). Geometrie 6206 PAS dans `configs/bearing_geometry.yaml` actuellement.
+
+      '
+- id: urn:aas:phaseA:M2:submodel:ConditionMonitoring
+  id_short: ConditionMonitoring
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/ConditionMonitoring/1/0
+  properties:
+  - id_short: PrioritySensors
+    value_type: xs:string
+    value: S1_acc_IEPE_100mVg@palier pompe, radial (vibration roulements / cavitation)
+      | S4_Pt100_RTD@corps de pompe (echauffement (garniture usee, cavitation)) |
+      S5_pressostat_pression_refoulement@refoulement (chute de pression en cas de
+      cavitation / fuite) | S7_debitmetre@refoulement (verification debit nominal
+      (usure))
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.priority_sensors
+  - id_short: TargetedFaults
+    value_type: xs:string
+    value: cavitation [iso=None, prop=P1] sig='bruit large bande 5-15 kHz, BPFO absente'
+      | garniture_usure [iso=None, prop=P1] sig='fuite visible, pas de signature spectrale
+      specifique' | bearing_outer_race [iso=5.1.2, prop=P2] sig='raies BPFO + harmoniques
+      dans enveloppe'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M2 + docs/theorie_reference.md
+      §5 (cavitation)
+  - id_short: GlobalConfidence
+    value_type: xs:string
+    value: uncalibrated
+    semantic_id: ''
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.confidence_global

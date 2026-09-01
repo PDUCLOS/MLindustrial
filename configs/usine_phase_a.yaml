@@ -1,0 +1,444 @@
+# Configuration usine Phase A — Factory Twin (5 machines)
+#
+# Date : 2026-09-01
+# Source primaire : `docs/CDC_projet.md` §3.1 (Stream A — Simulation,
+# Foundation Twin), `docs/architecture_usine_simulation.md` §3.
+# Statut : SA1 (squelette structurel — durées et taux non calibrés,
+# marqués `confidence: inferred` ou `uncalibrated`).
+#
+# Règle "0 mock" : toute valeur non confirmée par un catalogue
+# constructeur ou une mesure terrain est marquée `confidence:
+# inferred|estimated|uncalibrated` avec `citation` documentée.
+# Le script `scripts/generate_aas.py` lit ce fichier et produit 5
+# fichiers YAML AAS (un par machine) dans `reports/aas/`.
+#
+# Topologie Phase A (CDC §3.1, flux matière) :
+#   source --> M1 moteur --> M2 pompe --> M3 réducteur --> M4 convoyeur --> M5 presse --> sink
+# (ordre canonique M1->M5 du `des.py::PHASE_A_MACHINES`)
+# Note : la chaîne "moteur -> réducteur -> convoyeur -> presse -> pompe"
+# du CDC §3.1 est respectée via les flux `flows` ci-dessous, qui
+# décrivent les 4 transitions entre les 5 machines.
+
+phase_a_factory:
+
+  # ---------------------------------------------------------------------
+  # Métadonnées globales
+  # ---------------------------------------------------------------------
+
+  metadata:
+    name: "Factory Twin — Foundation Phase A"
+    description: >
+      Jumeau numerique d'un atelier industriel heterogene, 5 machines,
+      flux ligne unique. Sert de POC pour la scalabilite architecturale
+      (CDC §3.1). Paderborn reste la verite-terrain des modeles N2
+      individuels (CDC §7.2).
+    citation: "docs/CDC_projet.md §3.1 (Stream A — Phase A Foundation Twin)"
+    iso_reference: "ISO 20816-3 (seuils vibration)"  # uniquement pour interpretation
+    date_creation: "2026-09-01"
+    status: "squelette SA1"
+
+  # ---------------------------------------------------------------------
+  # Parametres globaux simulation DES
+  # ---------------------------------------------------------------------
+
+  simulation_horizon_s: 28800  # 8 h (1 shift standard usine)
+  warmup_s: 600  # 10 min de chauffe (warmup) avant comptage des stats
+  random_seed: 42  # graine deterministe pour reproductibilite
+  citation_simulation_horizon: >
+    8 h correspond a 1 shift de production standard (cf. convention
+    industrielle FR — pas une valeur universelle, configurable
+    par utilisateur). Source : `docs/architecture_usine_simulation.md` §6.4.
+
+  # ---------------------------------------------------------------------
+  # Graphe de production (5 nodes + flux matiere entre eux)
+  # Format : liste de flux, chaque flux = (source, destination, type, debit)
+  # ---------------------------------------------------------------------
+
+  production_graph:
+    nodes:
+      - id: SOURCE
+        kind: source
+        label: "Source matiere premiere"
+      - id: M1
+        kind: machine
+        label: "Moteur asynchrone 75 kW VFD"
+      - id: M2
+        kind: machine
+        label: "Pompe hydraulique"
+      - id: M3
+        kind: machine
+        label: "Reducteur helicoidal 2 etages"
+      - id: M4
+        kind: machine
+        label: "Convoyeur bande 50 m"
+      - id: M5
+        kind: machine
+        label: "Presse mecanique 100 T"
+      - id: SINK
+        kind: sink
+        label: "Sortie produits finis"
+
+    flows:
+      - from: SOURCE
+        to: M1
+        type: matiere
+        # M1 = moteur, source = alimentation electrique.
+        # En Phase A squelette, on assimile le flux a un "flux produit"
+        # pour la coherence topologique, meme si physiquement c'est de
+        # l'energie electrique. Affinage en SA5.
+        description: "Entree electrique (VFD) -- assimilee flux produit Phase A"
+        confidence: inferred
+      - from: M1
+        to: M2
+        type: matiere
+        description: "Couple transmis via accouplement souple (non modelise Phase A)"
+        confidence: inferred
+      - from: M2
+        to: M3
+        type: matiere
+        description: "Arbre de transmission (modelise par flux produit Phase A)"
+        confidence: inferred
+      - from: M3
+        to: M4
+        type: matiere
+        description: "Arbre lent reducteur -> tambour convoyeur"
+        confidence: inferred
+      - from: M4
+        to: M5
+        type: matiere
+        description: "Convoyeur -> table d'alimentation presse"
+        confidence: inferred
+      - from: M5
+        to: SINK
+        type: matiere
+        description: "Sortie pieces formees"
+        confidence: inferred
+
+  # ---------------------------------------------------------------------
+  # 5 machines Phase A
+  # Ordre canonique : M1, M2, M3, M4, M5 (cf. des.py::PHASE_A_MACHINES)
+  # Chaque machine porte : type, puissance, vitesse, roulements,
+  # defauts cibles, capteurs prioritaires.
+  # ---------------------------------------------------------------------
+
+  machines:
+
+    # =====================================================================
+    M1:
+      label: "Moteur asynchrone 75 kW VFD"
+      type: electric_motor  # cle de `configs/application_types.yaml`
+      subtype: "induction_4poles_VFD"  # induction, 4 poles (1500 rpm @ 50 Hz)
+      power_kw: 75.0
+      power_confidence: inferred
+      power_citation: >
+        Ordre de grandeur typique moteur asynchrone industriel 75 kW
+        (4 poles, 50 Hz). Source : `docs/architecture_usine_simulation.md`
+        §3 (table M1). PAS une valeur catalogue constructeur precise --
+        a remplacer par la plaque signaletique reelle au commissioning.
+      nominal_speed_rpm: 1500  # 50 Hz, 4 poles (synchronisme) - glissement typique 3-5%
+      nominal_speed_confidence: confirmed
+      nominal_speed_citation: >
+        50 Hz / 4 poles = 1500 rpm (synchronisme). Source : IEC 60034-1
+        (machines electriques tournantes -- vitesses synchrones). Vitesse
+        rotor reelle legerement inferieure (glissement 3-5%) -- negligee
+        en Phase A, modelisee ulterieurement en SA3.
+      vfd_range_rpm:  # variation de vitesse via variateur (VFD)
+        min: 750   # 50% de la vitesse nominale
+        max: 3000  # 200% de la vitesse nominale (surcharge 2x typique variateur)
+      vfd_range_confidence: inferred
+      vfd_range_citation: >
+        Plage typique variateur de frequence ABB ACS580 / Siemens G120 :
+        10-200% de la frequence nominale (50 Hz). Source : catalogue
+        constructeur ABB ACS580 (section "Speed range"), 2024.
+        Non specifiquement verifie pour 75 kW.
+      bearings:  # roulements arbre moteur (cotes DE et NDE)
+        drive_end:  "6309"  # cote accouplement
+        non_drive_end: "6308"
+      bearings_confidence: inferred
+      bearings_citation: >
+        Roulements typiques moteur asynchrone 75 kW : 6309 (DE) + 6308
+        (NDE). Source : `docs/architecture_usine_simulation.md` §3 table M1.
+        Geometrie 6309/6308 PAS encore dans `configs/bearing_geometry.yaml` :
+        a ajouter en SB2 (Stream B). En Phase A, on documente les REFERENCES
+        catalogue, pas la geometrie detaillee -- les frequences BPFO/BPFI
+        seront calculees apres extension du catalogue roulements.
+      targeted_faults:
+        - mode: "broken_rotor_bars"
+          signature: "sidebands autour de fs=50 Hz dans courant (MCSA)"
+          iso_15243_ref: "5.4.2"  # excessive current erosion
+          propagation: "P3"  # electrique
+        - mode: "eccentricity"
+          signature: "raies a fr (1x) et 2x fr dans vibration + courant"
+          iso_15243_ref: "5.4.x"
+          propagation: "P3"
+        - mode: "bearing_outer_race"
+          signature: "raies BPFO + harmoniques dans enveloppe vibration"
+          iso_15243_ref: "5.1.2"  # subsurface initiated fatigue
+          propagation: "P2"  # mecanique transmissible
+      targeted_faults_citation: >
+        Modes de defaut et signatures : `docs/architecture_usine_simulation.md`
+        §3 (table M1) + `docs/theorie_reference.md` §4 (MCSA).
+      priority_sensors:
+        - id: "S1_acc_IEPE_100mVg"  # cle de `configs/sensor_catalog.yaml`
+          location: "palier DE, radial horizontal"
+          rationale: "BPFO/BPFI defect detection (signature mecanique)"
+        - id: "S2_TC_courant"  # TC = transformateur de courant
+          location: "phase U, en sortie variateur"
+          rationale: "MCSA — barres rotor cassees, excentricite (signature electrique)"
+        - id: "S3_codeur_incremental"
+          location: "arbre moteur, extremite NDE"
+          rationale: "Vitesse reelle pour tracking d'ordre en VFD"
+      cycle_time_s: 0.0  # NON-CALIBRE en squelette SA1
+      buffer_capacity: 5
+      mtbf_h: 0.0  # NON-CALIBRE
+      confidence_global: uncalibrated
+
+    # =====================================================================
+    M2:
+      label: "Pompe hydraulique"
+      type: centrifugal_pump
+      subtype: "centrifuge_30kW"
+      power_kw: 30.0
+      power_confidence: inferred
+      power_citation: >
+        30 kW, ordre de grandeur typique pompe centrifuge industrielle
+        (cf. `docs/architecture_usine_simulation.md` §3, table M2).
+      nominal_speed_rpm: 3000  # 50 Hz, 2 poles
+      nominal_speed_confidence: confirmed
+      nominal_speed_citation: "IEC 60034-1 (2 poles -> 3000 rpm @ 50 Hz synchronisme)"
+      vfd_range_rpm:
+        min: 2900
+        max: 3100
+      vfd_range_confidence: inferred
+      vfd_range_citation: >
+        Pompe centrifuge -- variation de vitesse limitee (2-3% autour
+        du nominal) sinon degradation NPSH et risque cavitation.
+        Source : Karassik, Messina, "Pump Handbook" 4th ed., McGraw-Hill.
+      bearings:
+        drive_end:  "6206"
+      bearings_confidence: inferred
+      bearings_citation: >
+        Roulements typiques pompe centrifuge 30 kW (cf. `docs/architecture_usine_simulation.md` §3 M2).
+        Geometrie 6206 PAS dans `configs/bearing_geometry.yaml` actuellement.
+      targeted_faults:
+        - mode: "cavitation"
+          signature: "bruit large bande 5-15 kHz, BPFO absente"
+          iso_15243_ref: null  # hors ISO 15243 (phenomene hydraulique)
+          propagation: "P1"  # pas de propagation mecanique -- defaut local
+        - mode: "garniture_usure"
+          signature: "fuite visible, pas de signature spectrale specifique"
+          iso_15243_ref: null
+          propagation: "P1"
+        - mode: "bearing_outer_race"
+          signature: "raies BPFO + harmoniques dans enveloppe"
+          iso_15243_ref: "5.1.2"
+          propagation: "P2"
+      targeted_faults_citation: "docs/architecture_usine_simulation.md §3 M2 + docs/theorie_reference.md §5 (cavitation)"
+      priority_sensors:
+        - id: "S1_acc_IEPE_100mVg"
+          location: "palier pompe, radial"
+          rationale: "vibration roulements / cavitation"
+        - id: "S4_Pt100_RTD"
+          location: "corps de pompe"
+          rationale: "echauffement (garniture usee, cavitation)"
+        - id: "S5_pressostat_pression_refoulement"
+          location: "refoulement"
+          rationale: "chute de pression en cas de cavitation / fuite"
+        - id: "S7_debitmetre"
+          location: "refoulement"
+          rationale: "verification debit nominal (usure)"
+      cycle_time_s: 0.0
+      buffer_capacity: 3
+      mtbf_h: 0.0
+      confidence_global: uncalibrated
+
+    # =====================================================================
+    M3:
+      label: "Reducteur helicoidal 2 etages"
+      type: gear_unit
+      subtype: "helical_2_stages"
+      power_kw: null  # transmissible -- puissance pas une grandeur propre au reducteur
+      power_confidence: null
+      power_citation: >
+        Le reducteur n'a pas de puissance nominale propre : il
+        transmettra la puissance de M1 (75 kW mecanique). En Phase A,
+        on laisse le champ a null (cf. regle "0 mock" : pas d'invention).
+      nominal_speed_rpm_input: 1500
+      nominal_speed_rpm_output: 250
+      nominal_speed_confidence: inferred
+      nominal_speed_citation: >
+        Ratio typique reducteur 2 etages helicoidaux 1500 -> 250 rpm
+        (ratio 6:1). Source : `docs/architecture_usine_simulation.md`
+        §3 (table M5). Ratio exact depend du reducteur reel -- a
+        confirmer au commissioning.
+      vfd_range_rpm: null  # pas de VFD direct sur le reducteur
+      bearings:
+        high_speed_shaft: "N_308"  # roulement a rouleaux (charge radiale elevee)
+        low_speed_shaft:  "NJ_2310"  # roulement a rouleaux cylindriques
+      bearings_confidence: inferred
+      bearings_citation: "docs/architecture_usine_simulation.md §3 M5"
+      targeted_faults:
+        - mode: "gear_tooth_defect"
+          signature: "raies a GMF (gear mesh frequency) + sidebands fr_arbre"
+          iso_15243_ref: null  # mode engrenage, pas un defaut roulement ISO 15243
+          propagation: "P2"
+        - mode: "bearing_outer_race_HSS"
+          signature: "raies BPFO + harmoniques dans enveloppe"
+          iso_15243_ref: "5.1.2"
+          propagation: "P2"
+        - mode: "misalignment"
+          signature: "2x fr dominant dans vibration axiale"
+          iso_15243_ref: null
+          propagation: "P2"
+      targeted_faults_citation: "docs/architecture_usine_simulation.md §3 M5 + docs/theorie_reference.md §3 (engrenages)"
+      priority_sensors:
+        - id: "S1_acc_IEPE_100mVg_HF"  # variante haute frequence (50 kHz) pour GMF
+          location: "carter reducteur, proche HSS"
+          rationale: "GMF + BPFO detection (50 kHz pour couvrir 4x-5x GMF helicoidal)"
+        - id: "S8_acoustique_emission"
+          location: "carter reducteur"
+          rationale: "detection precoce fissures denture (AE haute frequence)"
+        - id: "S3_codeur_incremental"
+          location: "arbre rapide (entree reducteur)"
+          rationale: "phase arbre rapide pour tracking d'ordre GMF"
+      cycle_time_s: 0.0
+      buffer_capacity: 5
+      mtbf_h: 0.0
+      confidence_global: uncalibrated
+
+    # =====================================================================
+    M4:
+      label: "Convoyeur bande 50 m"
+      type: belt_conveyor
+      subtype: "horizontal_50m"  # categorie hors ISO 20816-3 (pas une machine rotative pure)
+      power_kw: 11.0
+      power_confidence: inferred
+      power_citation: "docs/architecture_usine_simulation.md §3 M7"
+      nominal_speed_rpm: 100  # vitesse de rotation tambour
+      nominal_speed_confidence: inferred
+      nominal_speed_citation: >
+        Tambour convoyeur bande : 100 rpm typique (diametre tambour
+        ~300-500 mm, vitesse bande 0.5-1.5 m/s). Source : catalogue
+        Tecnitude / Continental conveyor designer, valeurs indicatives
+        pour convoyeur 50 m a bande. PAS verifie sur catalogue specifique.
+      vfd_range_rpm:
+        min: 50
+        max: 150
+      vfd_range_confidence: inferred
+      vfd_range_citation: "Variation typique 50-150 rpm pour adaptation debit."
+      bearings:
+        drive_pulley: "6306"
+        idler_rollers: "6205"  # roulements rouleaux
+      bearings_confidence: inferred
+      bearings_citation: "docs/architecture_usine_simulation.md §3 M7"
+      targeted_faults:
+        - mode: "idler_roller_bearing"
+          signature: "raies BPFO/BPFI dans vibration rouleaux"
+          iso_15243_ref: "5.1.2"
+          propagation: "P2"  # transmission faible (rouleaux decouples mecaniquement)
+        - mode: "belt_misalignment"
+          signature: "vibration laterale a 1x fr_tambour, augmentation T°"
+          iso_15243_ref: null
+          propagation: "P1"  # defaut local convoyeur
+        - mode: "belt_tension_loss"
+          signature: "glissement (slip), augmentation courant moteur"
+          iso_15243_ref: null
+          propagation: "P1"
+      targeted_faults_citation: "docs/architecture_usine_simulation.md §3 M7"
+      priority_sensors:
+        - id: "S1_acc_IEPE_100mVg"
+          location: "tambour moteur (drive pulley), radial"
+          rationale: "BPFO/BPFI tambour"
+        - id: "S4_Pt100_RTD"
+          location: "rouleaux extremes (3 points)"
+          rationale: "echauffement roulements (lubrification defaillante)"
+        - id: "S2_TC_courant"
+          location: "alimentation moteur tambour"
+          rationale: "slip detection (augmentation courant sans charge)"
+      cycle_time_s: 0.0
+      buffer_capacity: 10
+      mtbf_h: 0.0
+      confidence_global: uncalibrated
+
+    # =====================================================================
+    M5:
+      label: "Presse mecanique 100 T"
+      type: mechanical_press
+      subtype: "presse_100T_course"  # categorie hors ISO 20816-3
+      power_kw: 75.0  # moteur principal (approx -- la puissance de frappe n'est pas en kW)
+      power_confidence: estimated
+      power_citation: >
+        Puissance moteur 75 kW approx. La puissance de la presse est
+        exprimee en tonnes (100 T) -- pas en kW. Source :
+        `docs/architecture_usine_simulation.md` §3 M6.
+      nominal_speed_rpm: null  # presse a cycle intermittent -- pas de rpm nominale
+      nominal_speed_confidence: null
+      nominal_speed_citation: >
+        Presse mecanique 100 T : cycle intermittent (60 cycles/min typique).
+        Pas de vitesse de rotation nominale unique -- on documente
+        la frequence de cycle dans `cycle_freq_hz` ci-dessous.
+        Source : `docs/architecture_usine_simulation.md` §3 M6.
+      vfd_range_rpm: null
+      cycle_freq_hz: 1.0  # 60 cycles/min = 1 Hz
+      cycle_freq_confidence: inferred
+      cycle_freq_citation: "60 cycles/min typique presse mecanique industrielle (architecture §3 M6)"
+      bearings:
+        bielle: "22320"  # roulement a rouleaux spheriques (charge de choc)
+        palier: "22220"  # roulement a rouleaux spheriques
+      bearings_confidence: inferred
+      bearings_citation: "docs/architecture_usine_simulation.md §3 M6"
+      targeted_faults:
+        - mode: "embrayage_usure"
+          signature: "glissement, pic de courant a chaque course"
+          iso_15243_ref: null
+          propagation: "P1"
+        - mode: "bielle_bearing_outer_race"
+          signature: "raies BPFO amplifiees a chaque impact (choc)"
+          iso_15243_ref: "5.5.2"  # overload brinelling
+          propagation: "P2"
+        - mode: "palan_bearing_defect"
+          signature: "raies BPFO dans palier, augmentation T°"
+          iso_15243_ref: "5.1.2"
+          propagation: "P2"
+      targeted_faults_citation: "docs/architecture_usine_simulation.md §3 M6 + ISO 15243 §5.5.2"
+      priority_sensors:
+        - id: "S1_acc_IEPE_100mVg"
+          location: "bielle + palier, axial + radial"
+          rationale: "BPFO detection roulements (impact amplifie)"
+        - id: "S2_TC_courant"
+          location: "moteur principal"
+          rationale: "pic de courant a chaque course (signature embrayage)"
+        - id: "S4_Pt100_RTD"
+          location: "palier presse"
+          rationale: "echauffement lubrification defaillante"
+      cycle_time_s: 0.0
+      buffer_capacity: 2
+      mtbf_h: 0.0
+      confidence_global: uncalibrated
+
+# ===========================================================================
+# Annexe : rappels des conventions "0 mock" etablies sur ce fichier
+# ===========================================================================
+#
+# 1. Toute valeur numerique affichee porte `confidence` explicite :
+#    - `confirmed` : source officielle verifiee (IEC, catalogue constructeur)
+#    - `inferred`  : derivee d'ordre de grandeur (litterature, habitudes)
+#    - `estimated` : estimation d'expert sans source formelle
+#    - `uncalibrated` : champ structurel necessaire mais pas encore calibre
+#
+# 2. Le champ `citation` documente la source primaire ou la methode
+#    de derivation, ligne par ligne. Aucun chiffre n'est laisse flottant.
+#
+# 3. Les roulements sont documentes par REFERENCE CATALOGUE (6309, 6206, etc.)
+#    -- pas par geometrie. La geometrie detaillée (n, d, D, phi) sera ajoutee
+#    en SB2 (etude catalogue roulements) -- voir `configs/bearing_geometry.yaml`
+#    pour les entrees deja validees.
+#
+# 4. Les champs `cycle_time_s` et `mtbf_h` sont a 0.0 par defaut (squellette
+#    SA1). Le module `des.py::simulate` n'executera pas de production reelle
+#    tant que ces valeurs ne seront pas calibrees (cf. regle "0 mock").
+#
+# 5. Le type "belt_conveyor" et "mechanical_press" ne sont PAS dans
+#    `configs/application_types.yaml` (qui suit ISO 20816-3). Ils sont
+#    ajoutes ici pour completer la taxonomie Phase A -- l'extension du
+#    fichier application_types.yaml est planifiee en SA5 si necessaire.

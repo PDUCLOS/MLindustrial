@@ -1,0 +1,90 @@
+id: urn:aas:phaseA:M5
+id_short: M5_Presse_mecanique_100_T
+asset_kind: Instance
+submodels:
+- id: urn:aas:phaseA:M5:submodel:Nameplate
+  id_short: Nameplate
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/Nameplate/3/0
+  properties:
+  - id_short: MachineID
+    value_type: xs:string
+    value: M5
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineID
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.M1.MachineID
+  - id_short: Label
+    value_type: xs:string
+    value: Presse mecanique 100 T
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Label
+    confidence: uncalibrated
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.label
+  - id_short: MachineType
+    value_type: xs:string
+    value: mechanical_press
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineType
+    confidence: confirmed
+    source_citation: configs/application_types.yaml (taxonomie ISO 20816-3) -- etendu
+      pour belt_conveyor et mechanical_press (hors ISO)
+  - id_short: SubType
+    value_type: xs:string
+    value: presse_100T_course
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.subtype
+  - id_short: PowerKW
+    value_type: xs:float
+    value: 75.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Power
+    confidence: estimated
+    source_citation: 'Puissance moteur 75 kW approx. La puissance de la presse est
+      exprimee en tonnes (100 T) -- pas en kW. Source : `docs/architecture_usine_simulation.md`
+      §3 M6.
+
+      '
+  - id_short: CycleFrequencyHz
+    value_type: xs:float
+    value: 1.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: 60 cycles/min typique presse mecanique industrielle (architecture
+      §3 M6)
+  - id_short: Bearing_bielle
+    value_type: xs:string
+    value: '22320'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M6
+  - id_short: Bearing_palier
+    value_type: xs:string
+    value: '22220'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M6
+- id: urn:aas:phaseA:M5:submodel:ConditionMonitoring
+  id_short: ConditionMonitoring
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/ConditionMonitoring/1/0
+  properties:
+  - id_short: PrioritySensors
+    value_type: xs:string
+    value: S1_acc_IEPE_100mVg@bielle + palier, axial + radial (BPFO detection roulements
+      (impact amplifie)) | S2_TC_courant@moteur principal (pic de courant a chaque
+      course (signature embrayage)) | S4_Pt100_RTD@palier presse (echauffement lubrification
+      defaillante)
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.priority_sensors
+  - id_short: TargetedFaults
+    value_type: xs:string
+    value: embrayage_usure [iso=None, prop=P1] sig='glissement, pic de courant a chaque
+      course' | bielle_bearing_outer_race [iso=5.5.2, prop=P2] sig='raies BPFO amplifiees
+      a chaque impact (choc)' | palan_bearing_defect [iso=5.1.2, prop=P2] sig='raies
+      BPFO dans palier, augmentation T°'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M6 + ISO 15243 §5.5.2
+  - id_short: GlobalConfidence
+    value_type: xs:string
+    value: uncalibrated
+    semantic_id: ''
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.confidence_global

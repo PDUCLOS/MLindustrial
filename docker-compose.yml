@@ -1,0 +1,66 @@
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: vibration
+      POSTGRES_PASSWORD: vibration
+      POSTGRES_DB: vibration
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vibration"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mlflow:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      mlflow server
+        --backend-store-uri postgresql://vibration:vibration@db:5432/vibration
+        --default-artifact-root /mlruns/artifacts
+        --host 0.0.0.0 --port 5000
+        --allowed-hosts "mlflow:5000,localhost:5001,localhost:5000"
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./mlruns:/mlruns
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://vibration:vibration@db:5432/vibration
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - .:/app
+      - ./mlruns:/mlruns
+    working_dir: /app
+    tty: true
+    stdin_open: true
+
+  dashboard:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://vibration:vibration@db:5432/vibration
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - .:/app
+      - ./mlruns:/mlruns
+    working_dir: /app
+    ports:
+      - "8501:8501"
+    command: ["streamlit", "run", "app/dashboard.py", "--server.address=0.0.0.0"]
+
+volumes:
+  postgres_data:

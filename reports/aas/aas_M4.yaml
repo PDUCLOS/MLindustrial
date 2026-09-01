@@ -1,0 +1,102 @@
+id: urn:aas:phaseA:M4
+id_short: M4_Convoyeur_bande_50_m
+asset_kind: Instance
+submodels:
+- id: urn:aas:phaseA:M4:submodel:Nameplate
+  id_short: Nameplate
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/Nameplate/3/0
+  properties:
+  - id_short: MachineID
+    value_type: xs:string
+    value: M4
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineID
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.M1.MachineID
+  - id_short: Label
+    value_type: xs:string
+    value: Convoyeur bande 50 m
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Label
+    confidence: uncalibrated
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.label
+  - id_short: MachineType
+    value_type: xs:string
+    value: belt_conveyor
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/MachineType
+    confidence: confirmed
+    source_citation: configs/application_types.yaml (taxonomie ISO 20816-3) -- etendu
+      pour belt_conveyor et mechanical_press (hors ISO)
+  - id_short: SubType
+    value_type: xs:string
+    value: horizontal_50m
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.subtype
+  - id_short: PowerKW
+    value_type: xs:float
+    value: 11.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/Power
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M7
+  - id_short: NominalSpeedRPM
+    value_type: xs:float
+    value: 100.0
+    semantic_id: https://admin-shell.io/sandbox/Nameplate/NominalSpeed
+    confidence: inferred
+    source_citation: 'Tambour convoyeur bande : 100 rpm typique (diametre tambour
+      ~300-500 mm, vitesse bande 0.5-1.5 m/s). Source : catalogue Tecnitude / Continental
+      conveyor designer, valeurs indicatives pour convoyeur 50 m a bande. PAS verifie
+      sur catalogue specifique.
+
+      '
+  - id_short: VFDRangeMinRPM
+    value_type: xs:float
+    value: 50.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: Variation typique 50-150 rpm pour adaptation debit.
+  - id_short: VFDRangeMaxRPM
+    value_type: xs:float
+    value: 150.0
+    semantic_id: ''
+    confidence: inferred
+    source_citation: Variation typique 50-150 rpm pour adaptation debit.
+  - id_short: Bearing_drive_pulley
+    value_type: xs:string
+    value: '6306'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M7
+  - id_short: Bearing_idler_rollers
+    value_type: xs:string
+    value: '6205'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M7
+- id: urn:aas:phaseA:M4:submodel:ConditionMonitoring
+  id_short: ConditionMonitoring
+  semantic_id: https://admin-shell.io/idta/SubmodelTemplates/ConditionMonitoring/1/0
+  properties:
+  - id_short: PrioritySensors
+    value_type: xs:string
+    value: S1_acc_IEPE_100mVg@tambour moteur (drive pulley), radial (BPFO/BPFI tambour)
+      | S4_Pt100_RTD@rouleaux extremes (3 points) (echauffement roulements (lubrification
+      defaillante)) | S2_TC_courant@alimentation moteur tambour (slip detection (augmentation
+      courant sans charge))
+    semantic_id: ''
+    confidence: inferred
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.priority_sensors
+  - id_short: TargetedFaults
+    value_type: xs:string
+    value: idler_roller_bearing [iso=5.1.2, prop=P2] sig='raies BPFO/BPFI dans vibration
+      rouleaux' | belt_misalignment [iso=None, prop=P1] sig='vibration laterale a
+      1x fr_tambour, augmentation T°' | belt_tension_loss [iso=None, prop=P1] sig='glissement
+      (slip), augmentation courant moteur'
+    semantic_id: ''
+    confidence: inferred
+    source_citation: docs/architecture_usine_simulation.md §3 M7
+  - id_short: GlobalConfidence
+    value_type: xs:string
+    value: uncalibrated
+    semantic_id: ''
+    confidence: confirmed
+    source_citation: configs/usine_phase_a.yaml::machines.<id>.confidence_global
