@@ -10,6 +10,7 @@ chiffre unique.
 Usage : uv run python scripts/run_baseline.py
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -90,7 +91,7 @@ def main() -> None:
     dataset_hash = hash_directory(PROCESSED_DIR)
     print(f"dataset hash (data/processed/**/*.parquet) : {dataset_hash[:16]}...")
 
-    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://mlflow:5000"))
     mlflow.set_experiment("baseline_threshold_cv")
 
     results = []

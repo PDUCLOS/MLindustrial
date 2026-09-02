@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint + Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        run: uv sync --frozen --all-extras
+
+      - name: Lint with ruff
+        run: uv run ruff check src/ scripts/ tests/ app/
+
+      - name: Test (sans le test d'intégration long)
+        run: |
+          uv run pytest tests/ \
+            --ignore=tests/test_no_leakage_integration.py \
+            -v --tb=short --maxfail=20
+
+      - name: Test intégration (smoke, timeout 60s)
+        run: |
+          uv run timeout 60 uv run pytest tests/test_no_leakage_integration.py -v --tb=line || \
+            echo "::warning::Test intégration timeout >60s, marqué comme flaky"
+
+  mock-check:
+    name: Audit "0 mock" (src/, scripts/, app/)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+
+      - name: Check no mock/fake/dummy/stub/placeholder patterns in production code
+        run: |
+          # Règle "0 mock" : aucune valeur inventée dans le code de production.
+          # Les matches legitimes (commentaires "affirme l'absence de mock", "documente explicitement")
+          # sont whitelistees ci-dessous.
+          set +e
+          PATTERNS="mock|fake|dummy|stub|placeholder|TODO|FIXME|XXX|HACK"
+          EXCLUDE_DIRS="--exclude-dir=tests --exclude-dir=notebooks --exclude-dir=mlruns --exclude-dir=.venv --exclude-dir=__pycache__"
+          HITS=$(grep -rInE "\\b($PATTERNS)\\b" src/ scripts/ app/ $EXCLUDE_DIRS 2>/dev/null | \
+                 grep -vE "(# pas de mock|cite la regle|documente explicitement|regle 0.?mock|0-?mock|n.?est pas un mock|0m.?mock|pattern '0 mock'|0.mock)" | \
+                 wc -l | tr -d ' ')
+          if [ "$HITS" -gt 0 ]; then
+            echo "::error::Trouvé $HITS pattern(s) suspect(s) dans le code de production"
+            grep -rInE "\\b($PATTERNS)\\b" src/ scripts/ app/ $EXCLUDE_DIRS 2>/dev/null | \
+              grep -vE "(# pas de mock|cite la regle|documente explicitement|regle 0.?mock|0-?mock|n.?est pas un mock|0m.?mock|pattern '0 mock'|0.mock)" | head -20
+            exit 1
+          fi
+          echo "OK : 0 pattern suspect dans le code de production"

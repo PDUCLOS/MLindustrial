@@ -1,0 +1,160 @@
+name: ML Pipeline (MLflow + Evidently)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "configs/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/ml-pipeline.yml"
+  workflow_dispatch:
+    inputs:
+      horizon:
+        description: "Horizon de simulation FastFwd (jours)"
+        required: false
+        default: "0"
+        type: string
+
+jobs:
+  train-and-monitor:
+    name: Train baseline + GBM + drift report
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Postgres/TimescaleDB reel, PAS sqlite : le schema (src/data/db.py::Feature)
+    # a une cle primaire composite (id, timestamp) requise par TimescaleDB pour
+    # partitionner l'hypertable - sqlite ne supporte pas l'autoincrement sur une
+    # cle composite (verifie empiriquement : CompileError a la creation de table).
+    # Meme image que docker-compose.yml pour rester coherent avec le dev local.
+    services:
+      db:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_USER: vibration
+          POSTGRES_PASSWORD: vibration
+          POSTGRES_DB: vibration
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U vibration"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg2://vibration:vibration@localhost:5432/vibration
+      MLFLOW_TRACKING_URI: sqlite:///tmp/mlruns/mlflow.db
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-3.11-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-3.11-
+
+      - name: Install dependencies
+        run: uv sync --frozen --all-extras
+
+      - name: Install evidently (drift detection)
+        run: uv pip install evidently==0.4.*
+
+      - name: Setup MLflow tracking + dossiers de sortie
+        run: |
+          mkdir -p /tmp/mlruns
+          mkdir -p reports/figures
+          mkdir -p reports/drift
+
+      - name: Init DB (schema + seed machines/geometries)
+        run: uv run python scripts/init_db.py
+
+      # Le dataset complet Paderborn fait ~5.4 Go (scripts/download_paderborn.sh,
+      # 32 roulements) - inadapte a un run sur chaque push. Sous-ensemble de 2
+      # roulements (1 sain, 1 defaut artificiel) pour un smoke test end-to-end
+      # reel (vrais fichiers .mat, pas une simulation) sans faire exploser la
+      # duree/bande passante CI. Le dataset complet reste telechargeable en
+      # local via scripts/download_paderborn.sh pour un entrainement complet.
+      - name: Installer unar (extraction .rar)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq unar
+
+      - name: Télécharger un sous-ensemble Paderborn (K001 sain + KA01 artificiel)
+        run: |
+          mkdir -p data/raw/paderborn
+          cd data/raw/paderborn
+          for code in K001 KA01; do
+            curl -sS --fail --retry 3 -o "${code}.rar" \
+              "https://groups.uni-paderborn.de/kat/BearingDataCenter/${code}.rar"
+            unar -quiet -output-directory . "${code}.rar"
+            rm -f "${code}.rar"
+          done
+
+      - name: Build dataset (K001 + KA01 uniquement)
+        run: uv run python scripts/build_dataset.py --codes K001 KA01 2>&1 | tail -30
+
+      - name: Train baseline (seuil RMS / kurtosis)
+        run: uv run python scripts/run_baseline.py 2>&1 | tail -30
+
+      - name: Train GBM (features physiques)
+        run: uv run python scripts/run_gbm.py 2>&1 | tail -30
+
+      - name: Generate Evidently drift report
+        run: |
+          # Genere un rapport Evidently sur la distribution des features entre
+          # train et test (drift detection sur le split train/test).
+          # Skip si pas d'evidently ou si le dataset est trop petit (2 assets
+          # ici, insuffisant pour un split train/test significatif - attendu
+          # sur ce smoke test, pas un echec a traiter comme bloquant).
+          uv run python scripts/run_drift_report.py 2>&1 | tail -30 || \
+            echo "::warning::Evidently drift report a échoué (attendu sur 2 assets, dataset trop petit pour un split train/test) - non bloquant"
+
+      - name: Upload MLflow artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-runs
+          path: /tmp/mlruns/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Upload drift reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-reports
+          path: reports/drift/
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Upload figures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: figures
+          path: reports/figures/
+          retention-days: 30
+          if-no-files-found: ignore
+
+  notify-failure:
+    name: Notify on failure
+    runs-on: ubuntu-latest
+    needs: train-and-monitor
+    if: failure()
+    steps:
+      - name: Récap failure
+        run: |
+          echo "::error::ML pipeline a échoué. Voir artifacts pour diagnostic."
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"

@@ -20,6 +20,8 @@ postgres_data/
 .ipynb_checkpoints/
 reports/figures/*.png
 !reports/figures/.gitkeep
+reports/drift/*.html
+!reports/drift/.gitkeep
 
 .env
 .DS_Store
