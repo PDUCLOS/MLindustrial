@@ -35,6 +35,7 @@ from src.evaluation.temporal_drift import (
 from app.tabs.alertes import render as render_alertes
 from app.tabs._glossaire import render as render_glossaire, help_text
 from app.tabs.factory_twin import render as render_factory_twin
+from app.tabs.spectre import render as render_spectre
 from app.tabs._styles import BOXPLOT_PROPS, DEFECT_ORIGIN_COLOR, PALETTE, style_figure
 
 st.set_page_config(page_title="Maintenance predictive - suivi", layout="wide", page_icon="\U0001F50D")
@@ -188,10 +189,10 @@ col3.metric("Signaux", int(signal_counts["n"].iloc[0]))
 col4.metric("Features calculees", int(feature_counts["n"].iloc[0]))
 
 (tab_factory, tab_assets, tab_features, tab_speed, tab_temporal, tab_alerts,
- tab_maintenance, tab_baseline, tab_glossaire, tab_factory_twin) = st.tabs(
+ tab_maintenance, tab_baseline, tab_glossaire, tab_factory_twin, tab_spectre) = st.tabs(
     ["\U0001F3ED Mon usine", "\U0001F527 Equipements", "\U0001F4CA Indicateurs", "\U0001F300 Vitesse",
      "\U0001F4C8 Historique", "\U0001F6A8 Alertes", "\U0001F4DD Journal maintenance", "\U0001F3AF Resultats modeles",
-     "\U00002753 Comprendre", "\U0001F3D7\uFE0F Factory Twin"]
+     "\U00002753 Comprendre", "\U0001F3D7\uFE0F Factory Twin", "\U0001F50D Spectre"]
 )
 
 def _slug(name: str) -> str:
@@ -628,3 +629,6 @@ with tab_glossaire:
 
 with tab_factory_twin:
     render_factory_twin()
+
+with tab_spectre:
+    render_spectre(engine)
