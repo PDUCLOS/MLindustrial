@@ -38,8 +38,6 @@ import mlflow
 import pandas as pd
 import streamlit as st
 
-from src.models.baseline import apply_threshold
-
 from app.tabs._components import (
     banner,
     confusion_heatmap,
@@ -49,7 +47,7 @@ from app.tabs._components import (
     status_badge,
 )
 from app.tabs._glossaire import help_text
-
+from src.models.baseline import apply_threshold
 
 # ---------------------------------------------------------------------------
 # CONFIG : tout ce qui est 'reglable' est ici. Pas de magic strings dans
@@ -616,7 +614,6 @@ def render(engine) -> None:
 
     # 2. Selection de la feature (par defaut : kurtosis, F1 0.682)
     feature_options = [(f[1], f[0]) for f in CONFIG["features"]]
-    feature_labels = [o[0] for o in feature_options]
     selected_idx = st.selectbox(
         "Feature analysee",
         options=range(len(feature_options)),

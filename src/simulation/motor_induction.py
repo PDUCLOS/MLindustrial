@@ -51,7 +51,6 @@ from src.features.fault_frequencies import (
     bpfi,
     bpfo,
     bsf,
-    ftf,
     rotational_frequency_hz,
 )
 from src.features.time_domain import rms
@@ -305,5 +304,5 @@ def motor_diagnostic_summary(signals: dict[str, np.ndarray], fs: int) -> dict[st
         "vibration_kurtosis": vib_kurt,
         "current_rms_a": i_rms,
         "duration_s": len(vib) / fs,
-        "n_samples": int(len(vib)),
+        "n_samples": len(vib),
     }

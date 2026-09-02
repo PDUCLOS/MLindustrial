@@ -7,11 +7,11 @@ piloter par cet artefact ; le consensus (moyenne sur le groupe) doit rester
 sur la resonance commune.
 """
 
-import numpy as np
-import pytest
-
 import sys
 from pathlib import Path
+
+import numpy as np
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

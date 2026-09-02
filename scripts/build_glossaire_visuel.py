@@ -16,11 +16,12 @@ from __future__ import annotations
 
 import re
 import sys
-import yaml
 from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib
+import yaml
+
 matplotlib.use("Agg")  # headless
 
 import matplotlib.pyplot as plt
@@ -32,7 +33,7 @@ from scipy.signal import hilbert
 # --- Accès au code src/ (features déjà implémentées) -------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
-from features.time_domain import rms, kurtosis, crest_factor  # noqa: E402
+from features.time_domain import crest_factor, kurtosis, rms
 
 # --- Chemins -----------------------------------------------------------------
 GLOSSARY_MD = PROJECT_ROOT / "docs" / "glossaire_pedagogique.md"
@@ -325,7 +326,6 @@ def fig_bpfo_bpfi_geometrie() -> Path:
     R_d = D / 2                       # rayon primitif
     R_ball = d / 2                    # rayon bille
     R_outer = R_d + R_ball + 0.6      # rayon extérieur bague ext.
-    R_inner_bore = R_d - R_ball - 0.6  # rayon intérieur bague int. (alésage)
     R_shaft = R_d - R_ball - 2.0      # rayon arbre (au centre)
 
     # 1. Bague extérieure (anneau entre R_d+R_ball+0.6 et R_d+R_ball)
@@ -583,12 +583,11 @@ def build_pdf(entries: list[GlossEntry], figures_per_term: dict[str, list[Path]]
     entre les entrées — c'était le bug de la v1 (KeepTogether + PageBreak
     explicite après chaque Image créait une page blanche systématique).
     """
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.units import cm
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Image,
-                                    PageBreak)
     from reportlab.lib.colors import HexColor
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, Spacer
 
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle("Title", parent=styles["Heading1"],
@@ -663,9 +662,8 @@ def build_pdf(entries: list[GlossEntry], figures_per_term: dict[str, list[Path]]
 def build_pptx(entries: list[GlossEntry], figures_per_term: dict[str, list[Path]],
                out_path: Path) -> None:
     from pptx import Presentation
-    from pptx.util import Inches, Pt
     from pptx.dml.color import RGBColor
-    from pptx.enum.text import PP_ALIGN
+    from pptx.util import Inches
 
     prs = Presentation()
     prs.slide_width = Inches(13.333)  # 16/9
@@ -745,7 +743,6 @@ def build_pptx(entries: list[GlossEntry], figures_per_term: dict[str, list[Path]
 def _add_text(slide, left, top, width, height, text, size=14, bold=False,
               color=None, italic=False):
     from pptx.util import Pt as _Pt
-    from pptx.dml.color import RGBColor as _RGB
     tx = slide.shapes.add_textbox(left, top, width, height)
     tf = tx.text_frame
     tf.word_wrap = True

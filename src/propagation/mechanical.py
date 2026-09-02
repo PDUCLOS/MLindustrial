@@ -42,7 +42,6 @@ import numpy as np
 
 from .base import Propagator, SignalDict
 
-
 # Coefficients d'attenuation alpha (s/m) par type de sol/structure.
 # Source : litterature Barkan 1962, repris par Richart & Whitman (1967) et les
 # normes ISO 10816. Ordres de grandeur coherents avec mesures industrielles.

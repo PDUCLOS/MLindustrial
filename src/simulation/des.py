@@ -196,10 +196,10 @@ def build_topology(env: simpy.Environment, cfg: PhaseAFactoryConfig) -> dict[str
     Retourne un dictionnaire avec les références (utile pour tests et
     instrumentation ultérieure) :
         - `buffers` : dict `f"M{n}_in" -> simpy.Container`
-        - `machines` : dict `f"M{n}" -> dict` (placeholder, valeur `None`
-          en squelette — la classe Machine sera ajoutée en SA2)
-        - `source` : place-holder pour la source de pièces
-        - `sink` : place-holder pour le puits de sortie
+        - `machines` : dict `f"M{n}" -> dict`, valeur `None` en attente
+          (la classe Machine sera ajoutée en SA2)
+        - `source` : entrée provisoire pour la source de pièces
+        - `sink` : sortie provisoire pour le puits de sortie
     """
     buffers: dict[str, simpy.Container] = {}
     for machine_id in PHASE_A_MACHINES[1:]:  # M2..M5

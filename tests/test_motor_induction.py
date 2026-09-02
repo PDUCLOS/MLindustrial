@@ -18,12 +18,12 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from src.features.fault_frequencies import rotational_frequency_hz
 from src.simulation.motor_induction import (
     MAINS_FREQUENCY_HZ,
     motor_diagnostic_summary,
     simulate_motor,
 )
-from src.features.fault_frequencies import rotational_frequency_hz
 
 # Configuration par defaut des tests : 4 s a 64 kHz, aligne Paderborn.
 DURATION_S = 4.0

@@ -41,7 +41,6 @@ import argparse
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -53,15 +52,22 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.features.time_domain import rms  # noqa: E402
-from src.gearbox.helical import HelicalGearGeometry, HelicalDefectConfig, simulate_helical_gearbox  # noqa: E402
-from src.propagation.electrical import ElectricalPropagator  # noqa: E402
-from src.propagation.mechanical import ALPHA_CONCRETE_RIGID_S, MechanicalCoupling, MechanicalPropagator  # noqa: E402
-from src.simulation._helpers import default_defect_config  # noqa: E402
-from src.simulation.motor_induction import simulate_motor  # noqa: E402
-from src.simulation.press_mechanical import simulate_press  # noqa: E402
-from src.simulation.pump_centrifuge import simulate_pump  # noqa: E402
-
+from src.features.time_domain import rms
+from src.gearbox.helical import (
+    HelicalDefectConfig,
+    HelicalGearGeometry,
+    simulate_helical_gearbox,
+)
+from src.propagation.electrical import ElectricalPropagator
+from src.propagation.mechanical import (
+    ALPHA_CONCRETE_RIGID_S,
+    MechanicalCoupling,
+    MechanicalPropagator,
+)
+from src.simulation._helpers import default_defect_config
+from src.simulation.motor_induction import simulate_motor
+from src.simulation.press_mechanical import simulate_press
+from src.simulation.pump_centrifuge import simulate_pump
 
 # ---------------------------------------------------------------------------
 # Constantes

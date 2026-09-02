@@ -20,7 +20,6 @@ from typing import Any
 import numpy as np
 import yaml
 
-
 # Chemin absolu vers la racine du projet (repose sur la structure du repo,
 # pas sur cwd - plus robuste pour pytest qui peut etre lance de partout).
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]

@@ -22,7 +22,6 @@ from src.propagation.electrical import (
     ElectricalPropagator,
 )
 
-
 FS = 64000
 DURATION = 1.0  # 1 s : fenetre suffisante pour 50 Hz (20 periodes entieres)
 

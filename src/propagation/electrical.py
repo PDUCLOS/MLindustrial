@@ -41,7 +41,6 @@ import numpy as np
 
 from .base import Propagator, SignalDict
 
-
 # Constantes physiques (confirmed) :
 # - Frequence secteur EU : 50 Hz (norme IEC 60038)
 # - Harmoniques VFD dominants : H3, H5, H7 (theorie des redresseurs 6 pulses,

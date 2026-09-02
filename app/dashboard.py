@@ -24,19 +24,29 @@ import textwrap
 import uuid
 from datetime import datetime
 
-from src.data.db import ApplicationType, Asset, Machine, MaintenanceEvent, Site, Zone, add_machine, get_engine, get_session
-from src.models.baseline import apply_threshold
+from app.tabs._glossaire import help_text
+from app.tabs._glossaire import render as render_glossaire
+from app.tabs._styles import BOXPLOT_PROPS, DEFECT_ORIGIN_COLOR, PALETTE, style_figure
+from app.tabs.alertes import render as render_alertes
+from app.tabs.factory_twin import render as render_factory_twin
+from app.tabs.spectre import render as render_spectre
+from src.data.db import (
+    ApplicationType,
+    Asset,
+    Machine,
+    MaintenanceEvent,
+    Site,
+    Zone,
+    add_machine,
+    get_engine,
+    get_session,
+)
 from src.evaluation.temporal_drift import (
     correlation_by_group,
     defect_type_crosstab,
     load_asset_level_series,
     same_day_pairs,
 )
-from app.tabs.alertes import render as render_alertes
-from app.tabs._glossaire import render as render_glossaire, help_text
-from app.tabs.factory_twin import render as render_factory_twin
-from app.tabs.spectre import render as render_spectre
-from app.tabs._styles import BOXPLOT_PROPS, DEFECT_ORIGIN_COLOR, PALETTE, style_figure
 
 st.set_page_config(page_title="Maintenance predictive - suivi", layout="wide", page_icon="\U0001F50D")
 

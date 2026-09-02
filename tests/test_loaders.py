@@ -14,7 +14,6 @@ d'integration (necessite un vrai .mat, fichiers gitignored, ~8 MB chacun). A tes
 explicitement avec pytest.mark.integration quand on dispose d'un environnement adapte.
 """
 
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +27,6 @@ from src.data.loaders import (
     parse_paderborn_filename,
     write_measurement_parquet,
 )
-
 
 # ---------- parse_paderborn_filename : cas valides ----------
 

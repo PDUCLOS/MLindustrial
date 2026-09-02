@@ -27,7 +27,6 @@ from typing import Any
 
 import numpy as np
 
-
 # Type alias pour un signal multi-canaux
 SignalDict = dict[str, np.ndarray]
 

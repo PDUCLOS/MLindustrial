@@ -54,40 +54,38 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # --- Imports metier (verifies a l'import, pas de mock silencieux) ---------
-from src.features.fault_frequencies import (  # noqa: E402
+from src.features.fault_frequencies import (
     bpfi,
     bpfo,
     bsf,
     rotational_frequency_hz,
 )
-from src.features.time_domain import (  # noqa: E402
+from src.features.time_domain import (
     crest_factor,
     kurtosis,
     peak_to_peak,
     rms,
 )
-from src.gearbox.helical import (  # noqa: E402
+from src.gearbox.helical import (
     HelicalDefectConfig,
     HelicalGearGeometry,
     compute_helical_gearbox_state,
     simulate_helical_gearbox,
 )
-from src.propagation.electrical import (  # noqa: E402
+from src.propagation.electrical import (
     MAINS_HZ,
-    ElectricalBusCoupling,
-    ElectricalPropagator,
     VFD_HARMONIC_RANKS,
+    ElectricalPropagator,
 )
-from src.propagation.mechanical import (  # noqa: E402
+from src.propagation.mechanical import (
     ALPHA_CONCRETE_RIGID_S,
     MechanicalCoupling,
     MechanicalPropagator,
 )
-from src.simulation._helpers import default_defect_config  # noqa: E402
-from src.simulation.motor_induction import simulate_motor  # noqa: E402
-from src.simulation.press_mechanical import simulate_press  # noqa: E402
-from src.simulation.pump_centrifuge import simulate_pump  # noqa: E402
-
+from src.simulation._helpers import default_defect_config
+from src.simulation.motor_induction import simulate_motor
+from src.simulation.press_mechanical import simulate_press
+from src.simulation.pump_centrifuge import simulate_pump
 
 # ---------------------------------------------------------------------------
 # Constantes de configuration
@@ -626,8 +624,8 @@ def _render_machines(seed: int) -> None:
             (st_gb.fr_intermediate_hz, f"fr_int={st_gb.fr_intermediate_hz:.1f} Hz", COLOR_NEUTRAL),
             (st_gb.gmf1_hz, f"GMF1={st_gb.gmf1_hz:.1f} Hz", COLOR_CRIT),
             (st_gb.gmf2_hz, f"GMF2={st_gb.gmf2_hz:.1f} Hz", COLOR_CRIT),
-            (st_gb.gmf1_hz + st_gb.fr_input_hz, f"GMF1+fr_in", COLOR_OK),
-            (st_gb.gmf1_hz - st_gb.fr_input_hz, f"GMF1-fr_in", COLOR_OK),
+            (st_gb.gmf1_hz + st_gb.fr_input_hz, "GMF1+fr_in", COLOR_OK),
+            (st_gb.gmf1_hz - st_gb.fr_input_hz, "GMF1-fr_in", COLOR_OK),
         ])
     elif selected in ("M2", "M4", "M5"):
         # Pas d'annotations particulieres (les simulateurs M2/M5 ne

@@ -13,7 +13,7 @@ de l'onglet appelant.
 from __future__ import annotations
 
 import html
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 import pandas as pd
 import streamlit as st

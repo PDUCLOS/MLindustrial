@@ -24,7 +24,6 @@ from src.propagation.mechanical import (
     MechanicalPropagator,
 )
 
-
 FS = 64000
 DURATION = 1.0  # 1 s suffit pour la verification FFT monofrquence
 

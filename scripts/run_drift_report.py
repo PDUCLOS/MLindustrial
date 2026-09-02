@@ -50,8 +50,8 @@ def main() -> int:
     # explicitement installe (cf. .github/workflows/ml-pipeline.yml).
     try:
         from evidently import ColumnMapping
-        from evidently.report import Report
         from evidently.metric_preset import DataDriftPreset, TargetDriftPreset
+        from evidently.report import Report
     except ImportError as e:
         print(f"::warning::evidently non disponible : {e}")
         print("::warning::Skipping drift report (installer evidently>=0.4)")

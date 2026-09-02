@@ -17,14 +17,14 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from src.features.fault_frequencies import (
+    bpfo,
+    rotational_frequency_hz,
+)
 from src.simulation.pump_centrifuge import (
     CAVITATION_BAND_HZ,
     pump_diagnostic_summary,
     simulate_pump,
-)
-from src.features.fault_frequencies import (
-    bpfo,
-    rotational_frequency_hz,
 )
 
 # Configuration par defaut : 4 s a 64 kHz, aligne Paderborn.

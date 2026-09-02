@@ -309,7 +309,8 @@ def press_diagnostic_summary(signals: dict[str, np.ndarray], fs: int) -> dict[st
         (incluant courant crete, utile pour detecter les pics d'embrayage
         et de frappe).
     """
-    from src.features.time_domain import kurtosis as kurt_fn, peak_to_peak
+    from src.features.time_domain import kurtosis as kurt_fn
+    from src.features.time_domain import peak_to_peak
 
     vib = signals["vibration"]
     cur = signals["current"]
@@ -320,5 +321,5 @@ def press_diagnostic_summary(signals: dict[str, np.ndarray], fs: int) -> dict[st
         "current_rms_a": rms(cur),
         "current_peak_a": float(np.max(np.abs(cur))),
         "duration_s": len(vib) / fs,
-        "n_samples": int(len(vib)),
+        "n_samples": len(vib),
     }

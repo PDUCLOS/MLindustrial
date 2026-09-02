@@ -18,11 +18,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from src.features.fault_frequencies import rotational_frequency_hz
 from src.simulation.press_mechanical import (
     DEFAULT_CRANKSHAFT_RPM,
     simulate_press,
 )
-from src.features.fault_frequencies import rotational_frequency_hz
 
 DURATION_S = 4.0
 FS = 64000

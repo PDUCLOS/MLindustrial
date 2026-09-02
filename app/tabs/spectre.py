@@ -24,13 +24,13 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from app.tabs._components import inject_css_once
+from app.tabs._styles import PALETTE, STATUS_COLOR, style_figure
+from app.tabs.alertes import CONFIG as ALERTES_CONFIG
+from app.tabs.alertes import _read_threshold_from_run
 from src.data.db import Asset, BearingAttributes, MaintenanceEvent, get_session
 from src.features.fault_frequencies import all_fault_frequencies
 from src.models.baseline import apply_threshold
-
-from app.tabs._components import inject_css_once
-from app.tabs._styles import DEFECT_ORIGIN_COLOR, PALETTE, STATUS_COLOR, style_figure
-from app.tabs.alertes import CONFIG as ALERTES_CONFIG, _read_threshold_from_run
 
 HEALTH_STATES = ["healthy", "faulty", "degraded", "unknown"]
 DEFECT_ORIGINS = ["na", "artificial", "real"]
@@ -386,7 +386,7 @@ def _render_spectrum_and_cause(
         ax.axvline(f, color=FAULT_LINE_COLORS.get(name, "gray"), linestyle="--", alpha=0.7,
                     label=f"{name} théo. ({f:.1f} Hz)")
     if theo:
-        legend = ax.legend()
+        ax.legend()
     style_figure(fig, ax)
     st.pyplot(fig)
 

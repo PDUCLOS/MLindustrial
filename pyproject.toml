@@ -44,6 +44,14 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: tests necessitant une DB/service externe reelle"]
 
 [tool.ruff]
 line-length = 100
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint.per-file-ignores]
+# sys.path.insert(...) avant les imports src.* : pattern volontaire de
+# bootstrap utilise par tous les scripts CLI (voir docs/brief_projet.md).
+"scripts/*.py" = ["E402"]
+"tests/test_aas.py" = ["E402"]

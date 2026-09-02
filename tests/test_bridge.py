@@ -24,7 +24,6 @@ from src.propagation.electrical import ElectricalBusCoupling, ElectricalPropagat
 from src.propagation.mechanical import MechanicalCoupling, MechanicalPropagator
 from src.simulation.bridge import DESEvent, SimulationBridge
 
-
 FS = 64000
 DURATION = 1.0  # 1 s pour accelerer les tests
 

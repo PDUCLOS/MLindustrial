@@ -4,7 +4,6 @@ Voir docs/brief_projet.md piege methodologique #1 : segmenter un signal en fenet
 melanger train/test fait fuiter la meme entite dans les deux ensembles.
 """
 
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 

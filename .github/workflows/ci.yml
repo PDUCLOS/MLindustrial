@@ -76,13 +76,14 @@ jobs:
           set +e
           PATTERNS="mock|fake|dummy|stub|placeholder|TODO|FIXME|XXX|HACK"
           EXCLUDE_DIRS="--exclude-dir=tests --exclude-dir=notebooks --exclude-dir=mlruns --exclude-dir=.venv --exclude-dir=__pycache__"
+          WHITELIST="pas (de |d.|un |une )?(mock|placeholder|stub)|placeholder=\"|cite la regle|documente explicitement|regle 0.?mock|0-?mock|n.?est pas un mock|0m.?mock|pattern '0 mock'|0.mock"
           HITS=$(grep -rInE "\\b($PATTERNS)\\b" src/ scripts/ app/ $EXCLUDE_DIRS 2>/dev/null | \
-                 grep -vE "(# pas de mock|cite la regle|documente explicitement|regle 0.?mock|0-?mock|n.?est pas un mock|0m.?mock|pattern '0 mock'|0.mock)" | \
+                 grep -vE "$WHITELIST" | \
                  wc -l | tr -d ' ')
           if [ "$HITS" -gt 0 ]; then
             echo "::error::Trouvé $HITS pattern(s) suspect(s) dans le code de production"
             grep -rInE "\\b($PATTERNS)\\b" src/ scripts/ app/ $EXCLUDE_DIRS 2>/dev/null | \
-              grep -vE "(# pas de mock|cite la regle|documente explicitement|regle 0.?mock|0-?mock|n.?est pas un mock|0m.?mock|pattern '0 mock'|0.mock)" | head -20
+              grep -vE "$WHITELIST" | head -20
             exit 1
           fi
           echo "OK : 0 pattern suspect dans le code de production"

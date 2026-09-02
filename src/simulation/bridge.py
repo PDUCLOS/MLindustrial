@@ -36,14 +36,14 @@ Conventions :
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 import numpy as np
 
 from src.gearbox.helical import HelicalDefectConfig
 from src.propagation.base import Propagator, SignalDict
-
 
 # Type alias pour la fonction de simulation d'une machine
 # Signature : (machine_id, is_running, defect_config, **kwargs) -> SignalDict
@@ -120,7 +120,7 @@ class SimulationBridge:
         self.propagators: list[Propagator] = list(propagators or [])
         self.fs = fs
         self._states: dict[str, _MachineRuntimeState] = {
-            mid: _MachineRuntimeState() for mid in simulators.keys()
+            mid: _MachineRuntimeState() for mid in simulators
         }
 
     # ------------------------------------------------------------------

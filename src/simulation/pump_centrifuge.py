@@ -286,5 +286,5 @@ def pump_diagnostic_summary(signals: dict[str, np.ndarray], fs: int) -> dict[str
         "flow_mean_m3h": float(np.mean(signals["flow"])),
         "temperature_mean_c": float(np.mean(signals["temperature"])),
         "duration_s": len(vib) / fs,
-        "n_samples": int(len(vib)),
+        "n_samples": len(vib),
     }

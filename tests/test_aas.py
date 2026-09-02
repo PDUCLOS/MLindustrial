@@ -31,19 +31,18 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.simulation.aas import (  # noqa: E402  (import apres sys.path)
-    AssetAdministrationShell,
-    Property,
-    Submodel,
-    validate_aas,
-)
-from scripts.generate_aas import (  # noqa: E402
+from scripts.generate_aas import (
     aas_from_dict,
     aas_to_dict,
     build_aas,
     generate,
 )
-
+from src.simulation.aas import (
+    AssetAdministrationShell,
+    Property,
+    Submodel,
+    validate_aas,
+)
 
 # ===========================================================================
 # 1. Property : invariants structurels

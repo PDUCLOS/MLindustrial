@@ -18,12 +18,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.gearbox.helical import (
     HelicalDefectConfig,
     HelicalGearGeometry,
-    compute_helical_gearbox_state,
     compute_fft,
+    compute_helical_gearbox_state,
     find_peak_bin,
     simulate_helical_gearbox,
 )
-
 
 # Configuration partagee par les tests
 GEOM = HelicalGearGeometry()  # 20-60 x 20-60, ratio total 9:1

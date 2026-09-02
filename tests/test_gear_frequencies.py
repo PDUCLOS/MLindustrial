@@ -7,13 +7,13 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from src.features.fault_frequencies import all_fault_frequencies
 from src.features.gear_frequencies import (
     GearStage,
     compute_gear_train,
     first_stage_input_bearing_frequencies,
     summarize_gear_train,
 )
-from src.features.fault_frequencies import all_fault_frequencies
 
 
 def test_single_helical_stage_matches_hand_calc():
