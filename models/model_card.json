@@ -1,0 +1,46 @@
+{
+  "model_name": "xgboost_vibration_time_domain",
+  "task": "health_state binaire (healthy / faulty), roulement 6203, banc Paderborn KAt",
+  "feature_order": [
+    "vibration_crest_factor",
+    "vibration_kurtosis",
+    "vibration_peak_to_peak",
+    "vibration_rms",
+    "vibration_skewness"
+  ],
+  "sampling_rate_hz": 64000,
+  "xgboost_params": {
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "n_estimators": 200
+  },
+  "trained_on": {
+    "n_measurements": 2319,
+    "n_bearings": 29,
+    "held_out_bearings": {
+      "K006": "healthy",
+      "KI08": "artificial",
+      "KA22": "real"
+    }
+  },
+  "cv_vibration_only_32_bearings": {
+    "scheme": "StratifiedGroupKFold 5 folds, groupe = roulement, random_state=42",
+    "f1_macro_mean": 0.7339,
+    "f1_macro_std": 0.2062,
+    "balanced_accuracy_mean": 0.7431,
+    "fold_f1": [
+      0.9779,
+      0.4734,
+      0.8472,
+      0.8694,
+      0.5016
+    ]
+  },
+  "baseline_kurtosis": {
+    "threshold": 13.3845,
+    "direction": "lower_is_faulty"
+  },
+  "dataset_hash": "8885f27eeaa8d130f7d006a2330e5d3e80bbedd1df314d2e074b7de3e8c3c57b",
+  "exported_at": "2026-10-27T13:42:57+00:00",
+  "license_data": "Paderborn KAt-DataCenter, CC BY-NC 4.0 (Lessmeier et al., 2016)"
+}

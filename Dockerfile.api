@@ -1,0 +1,37 @@
+# ===========================================================================
+# Image de l'API de diagnostic roulement (api/main.py)
+#
+#   docker build -f Dockerfile.api -t mlindustrial-api:1.0.0 .
+#   docker run -p 8765:8765 mlindustrial-api:1.0.0
+#
+# Image de SERVICE uniquement : le modele XGBoost (models/*.json) et les
+# mesures de demo sont embarques, aucune base ni MLflow n'est necessaire.
+# L'image de developpement complete (TimescaleDB, MLflow, Streamlit, torch)
+# reste le Dockerfile racine, utilise par docker-compose.yml.
+# ===========================================================================
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+COPY api/requirements.txt api/requirements.txt
+RUN pip install -r api/requirements.txt
+
+# Uniquement le code necessaire a l'inference (pas de torch, mlflow, streamlit).
+COPY src/__init__.py src/__init__.py
+COPY src/features/__init__.py src/features/time_domain.py src/features/
+COPY src/serving src/serving
+COPY api api
+COPY models models
+
+RUN useradd --uid 10001 --no-create-home app
+USER 10001
+
+EXPOSE 8765
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=3)"
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8765", "--workers", "2"]

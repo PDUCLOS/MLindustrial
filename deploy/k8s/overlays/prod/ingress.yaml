@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bearing-api
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 8m  # un signal de 4 s en JSON ~ 5 Mo
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [diagnostic.example.com]
+      secretName: bearing-api-tls
+  rules:
+    - host: diagnostic.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: bearing-api, port: {name: http}}

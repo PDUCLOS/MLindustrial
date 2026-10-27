@@ -1,0 +1,15 @@
+# Base commune : rendu avec `kubectl kustomize deploy/k8s/overlays/local`
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bearing-diagnosis
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: mlindustrial
+resources:
+  - namespace.yaml
+  - config.yaml
+  - api.yaml
+  - networkpolicy.yaml
+images:
+  - name: mlindustrial-api
+    newTag: "1.0.0"

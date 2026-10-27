@@ -1,0 +1,15 @@
+# L'API n'appelle aucun service externe : tout trafic sortant est refuse,
+# seul le port HTTP est ouvert en entree.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: bearing-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: bearing-api
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - ports:
+        - port: 8765
+  egress: []

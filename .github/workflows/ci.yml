@@ -43,7 +43,7 @@ jobs:
         run: uv sync --frozen --all-extras
 
       - name: Lint with ruff
-        run: uv run ruff check src/ scripts/ tests/ app/
+        run: uv run ruff check src/ scripts/ tests/ app/ api/
 
       - name: Test (sans le test d'intégration long)
         run: |
