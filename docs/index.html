@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maintenance prédictive vibratoire</title>
+<meta name="description" content="Diagnostic de défauts de roulements sur le jeu Paderborn : features physiques explicables, validation groupée par roulement, écart artificiel → réel mesuré, API et déploiement Kubernetes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Identité : atelier — acier sombre pour le héros, ambre « signalisation » pour l'accent. */
+:root {
+  --bg: #f4f4f1; --surface: #ffffff; --ink: #1a1d21; --muted: #5b626b; --line: #dcdcd6;
+  --accent: #b56a00; --accent-soft: #fbefd9; --steel: #2d3a48;
+  --good: #1f7a4d; --good-soft: #e1f2e8; --bad: #b3261e; --bad-soft: #fbe3e1;
+  --hero: #161c23; --hero-ink: #eceff2; --hero-muted: #a9b3bf;
+  --code-bg: #12171d; --code-ink: #e2e6ea;
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #101317; --surface: #181d23; --ink: #e7eaee; --muted: #9ea7b2; --line: #2a313a;
+  --accent: #e8a33d; --accent-soft: #33270f; --steel: #9fb4c9;
+  --good: #5cc78f; --good-soft: #14301f; --bad: #f08079; --bad-soft: #3a1a18;
+  --hero: #0b0e12; --code-bg: #0a0d11; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #101317; --surface: #181d23; --ink: #e7eaee; --muted: #9ea7b2; --line: #2a313a;
+  --accent: #e8a33d; --accent-soft: #33270f; --steel: #9fb4c9;
+  --good: #5cc78f; --good-soft: #14301f; --bad: #f08079; --bad-soft: #3a1a18;
+  --hero: #0b0e12; --code-bg: #0a0d11; color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.62 var(--f-body); }
+img, video { max-width: 100%; height: auto; display: block; }
+a { color: var(--accent); text-underline-offset: 3px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.6rem, 3.2vw, 2.1rem); font-weight: 600; line-height: 1.15; }
+h3 { font-size: 1.15rem; font-weight: 600; line-height: 1.3; }
+p { margin: 0; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-left, 0px)); }
+section { padding: 64px 0; border-top: 1px solid var(--line); }
+.eyebrow { font: 500 .78rem var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; display: block; }
+.lead { font-size: 1.12rem; color: var(--muted); margin-top: 14px; max-width: 760px; }
+.stack > * + * { margin-top: 18px; }
+nav.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--hero) 94%, transparent); backdrop-filter: blur(6px); }
+nav.top .wrap { display: flex; gap: 18px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; scrollbar-width: none; }
+nav.top a { color: var(--hero-muted); font: 500 .85rem var(--f-mono); text-decoration: none; white-space: nowrap; }
+nav.top a:hover { color: #fff; }
+header.hero { background: var(--hero); color: var(--hero-ink); padding: 72px 0 56px; }
+.hero h1 { font-size: clamp(2.2rem, 6vw, 3.8rem); line-height: 1.03; max-width: 900px; }
+.hero h1 em { font-style: normal; color: #e8a33d; }
+.hero .lead { color: var(--hero-muted); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: #2c343e; border-radius: 10px; overflow: hidden; margin-top: 36px; }
+.kpi { background: var(--hero); padding: 20px 18px; }
+.kpi b { display: block; font: 700 2.1rem var(--f-display); color: #fff; }
+.kpi span { font-size: .85rem; color: var(--hero-muted); line-height: 1.35; display: block; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.btn { display: inline-block; padding: 10px 18px; border-radius: 6px; font-weight: 600; text-decoration: none; border: 1px solid #e8a33d; color: #e8a33d; }
+.btn.fill { background: #e8a33d; color: #161c23; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.card h3 { margin-bottom: 8px; }
+.card p, .card li { color: var(--muted); font-size: .96rem; }
+.card ul { margin: 0; padding-left: 18px; }
+figure { margin: 0; }
+figure img, video { border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+figcaption { font-size: .88rem; color: var(--muted); margin-top: 8px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 .78rem var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: color-mix(in srgb, var(--accent-soft) 40%, var(--surface)); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.ok { color: var(--good); font-weight: 600; } .ko { color: var(--bad); font-weight: 600; }
+.note { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 14px 18px; border-radius: 0 8px 8px 0; }
+.steps { counter-reset: s; list-style: none; padding: 0; display: grid; gap: 12px; }
+.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px 14px 60px; position: relative; }
+.steps li::before { content: counter(s); position: absolute; left: 16px; top: 12px; width: 30px; height: 30px; border-radius: 50%; background: var(--steel); color: var(--bg); display: grid; place-items: center; font: 600 .9rem var(--f-mono); }
+pre { background: var(--code-bg); color: var(--code-ink); padding: 16px 18px; border-radius: 10px; overflow-x: auto; font: .85rem/1.55 var(--f-mono); margin: 0; }
+dl { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 10px 20px; margin: 0; }
+dt { font-weight: 600; } dd { margin: 0; color: var(--muted); }
+@media (max-width: 640px) { dl { grid-template-columns: 1fr; } dd { margin-bottom: 8px; } section { padding: 48px 0; } }
+footer { padding: 40px 0 60px; color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Sommaire"><div class="wrap">
+  <a href="#video">Vidéo</a><a href="#probleme">Problème</a><a href="#demo">Démo</a><a href="#physique">Physique</a>
+  <a href="#evaluation">Évaluation</a><a href="#architecture">Architecture</a><a href="#demarche">Démarche</a>
+  <a href="#kubernetes">Kubernetes</a><a href="#limites">Limites</a><a href="#glossaire">Glossaire</a><a href="#lancer">Lancer</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="eyebrow" style="color:#e8a33d">ML industriel · Analyse vibratoire · Paderborn KAt</span>
+  <h1>Détecter un roulement qui va lâcher, <em>et dire honnêtement quand on n'y arrive pas</em>.</h1>
+  <p class="lead">Diagnostic de défauts de roulements à partir de vibrations réelles, avec des indicateurs que comprend un responsable maintenance. La question centrale : un modèle entraîné sur des défauts usinés en laboratoire reconnaît-il un vrai défaut de fatigue ?</p>
+  <div class="kpis">
+    <div class="kpi"><b>32</b><span>roulements réels, 2 559 mesures de 4 s à 64 kHz</span></div>
+    <div class="kpi"><b>0,734</b><span>F1 macro XGBoost, validation groupée par roulement (± 0,206)</span></div>
+    <div class="kpi"><b>0,620</b><span>F1 macro de l'artificiel vers le réel (± 0,102)</span></div>
+    <div class="kpi"><b>23 ms</b><span>calcul des 5 indicateurs d'une mesure (CPU)</span></div>
+    <div class="kpi"><b>223</b><span>tests verts (dont 9 nouveaux pour l'API)</span></div>
+  </div>
+  <div class="cta">
+    <a class="btn fill" href="https://github.com/PDUCLOS/MLindustrial">Code source</a>
+    <a class="btn" href="#demo">Voir la démo</a>
+    <a class="btn" href="https://github.com/PDUCLOS/MLindustrial/blob/main/docs/PORTFOLIO.md">Toutes les mesures</a>
+  </div>
+</div></header>
+
+<main>
+<section id="video"><div class="wrap stack">
+  <span class="eyebrow">En 2 minutes</span>
+  <h2>Le projet en vidéo</h2>
+  <video controls preload="metadata" poster="video/poster.png" width="1920" height="1080">
+    <source src="video/maintenance-predictive-promo.mp4" type="video/mp4">
+  </video>
+  <p class="lead" style="font-size:.95rem">Vidéo générée par <code>scripts/promo_video.py</code> à partir des captures réelles de cette page ; narration par synthèse vocale.</p>
+</div></section>
+
+<section id="probleme"><div class="wrap stack">
+  <span class="eyebrow">Le problème</span>
+  <h2>Un score brillant au labo ne dit rien de l'atelier</h2>
+  <p class="lead">La plupart des démonstrations de maintenance prédictive testent un modèle sur les roulements qu'il a déjà vus, avec des défauts fabriqués à la main. Les scores sont flatteurs ; en production, ils s'effondrent.</p>
+  <div class="grid2">
+    <div class="card"><h3>Pour un responsable maintenance</h3><ul>
+      <li>Un roulement qui casse arrête une ligne : l'enjeu est d'anticiper, pas d'afficher un score.</li>
+      <li>Le diagnostic s'appuie sur des grandeurs connues des vibriciens (énergie, chocs), donc discutable devant un chef d'atelier.</li>
+      <li>Le projet compare aussi le <strong>courant moteur</strong>, déjà mesuré par chaque variateur, à un accéléromètre à installer : peut-on éviter d'instrumenter ?</li>
+    </ul></div>
+    <div class="card"><h3>Pour un lecteur technique</h3><ul>
+      <li>Découpage <strong>par roulement</strong>, jamais par fenêtre de signal : aucune fuite entre entraînement et test.</li>
+      <li>Baseline à seuil obligatoire avant tout modèle plus complexe.</li>
+      <li>Moyenne ± écart-type sur 5 folds : avec 32 roulements, un chiffre seul serait trompeur.</li>
+      <li>Résultats négatifs publiés tels quels.</li>
+    </ul></div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap stack">
+  <span class="eyebrow">Démo réelle</span>
+  <h2>Trois roulements que le modèle n'a jamais vus</h2>
+  <p class="lead">L'API (<code>api/main.py</code>) embarque 6 mesures réelles de 3 roulements tenus à l'écart de l'entraînement : un sain, un défaut artificiel, un défaut réel. Résultat, sans retouche :</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Mesure</th><th>Vérité</th><th>XGBoost</th><th>P(défaut)</th><th>Baseline kurtosis</th></tr></thead>
+    <tbody>
+      <tr><td>K006 · N15_M07_F10</td><td>sain</td><td class="ok">sain</td><td class="num">0,9 %</td><td class="ok">sain</td></tr>
+      <tr><td>K006 · N09_M07_F10</td><td>sain</td><td class="ok">sain</td><td class="num">0,8 %</td><td class="ok">sain</td></tr>
+      <tr><td>KI08 · N15_M07_F10</td><td>défaut artificiel</td><td class="ok">défaut</td><td class="num">99,6 %</td><td class="ok">défaut</td></tr>
+      <tr><td>KI08 · N09_M07_F10</td><td>défaut artificiel</td><td class="ok">défaut</td><td class="num">97,8 %</td><td class="ko">sain</td></tr>
+      <tr><td>KA22 · N15_M07_F10</td><td>défaut <strong>réel</strong></td><td class="ko">sain</td><td class="num">12,0 %</td><td class="ok">défaut</td></tr>
+      <tr><td>KA22 · N09_M07_F10</td><td>défaut <strong>réel</strong></td><td class="ko">sain</td><td class="num">2,3 %</td><td class="ko">sain</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Le défaut réel KA22 (fatigue de la bague extérieure) est manqué par XGBoost sur les deux régimes, alors que la règle simple sur la kurtosis le détecte une fois sur deux. C'est l'écart labo / terrain que mesure la section <a href="#evaluation">Évaluation</a> — montré ici plutôt que caché par un choix d'exemples favorable.</p>
+  <div class="grid2">
+    <figure><img src="img/demo-api-artificiel.png" alt="Démo : défaut artificiel KI08 détecté à 99,6 %" loading="lazy" width="1400" height="820"><figcaption>Défaut artificiel KI08 : détecté (99,6 %).</figcaption></figure>
+    <figure><img src="img/demo-api-reel-manque.png" alt="Démo : défaut réel KA22 classé sain à tort" loading="lazy" width="1400" height="820"><figcaption>Défaut réel KA22 : classé sain à tort (12,0 %).</figcaption></figure>
+  </div>
+  <div class="grid2">
+    <figure><img src="img/dashboard-alertes.png" alt="Dashboard Streamlit, onglet Alertes" loading="lazy" width="1500" height="1050"><figcaption>Dashboard Streamlit existant, onglet Alertes : seuil appris, 21 roulements sur 32 en alerte, concordance 71,9 %.</figcaption></figure>
+    <figure><img src="img/dashboard-jumeau.png" alt="Dashboard Streamlit, jumeau numérique" loading="lazy" width="1500" height="1050"><figcaption>Jumeau numérique d'usine (simulation physique, étiquetée comme telle).</figcaption></figure>
+  </div>
+  <figure><img src="img/demo-swagger.png" alt="Documentation OpenAPI de l'API" loading="lazy" width="1400" height="1000"><figcaption>Documentation OpenAPI générée par FastAPI : <code>/predict</code> (signal brut), <code>/predict/features</code>, <code>/samples</code>, <code>/model</code>.</figcaption></figure>
+</div></section>
+
+<section id="physique"><div class="wrap stack">
+  <span class="eyebrow">Physique avant le ML</span>
+  <h2>Le trajet d'une mesure, en six étapes</h2>
+  <ol class="steps">
+    <li><strong>Acquisition.</strong> Un accéléromètre enregistre 64 000 points par seconde pendant 4 s ; deux courants moteur sont enregistrés en parallèle.</li>
+    <li><strong>Contrôles.</strong> Le nom de fichier donne le régime (vitesse, couple, effort radial) et le roulement ; des contrôles physiques rejettent les valeurs impossibles. Sur 2 560 fichiers, 1 est illisible et écarté avec un message explicite.</li>
+    <li><strong>Indicateurs.</strong> RMS (énergie), crête à crête, facteur de crête, kurtosis (impulsivité), asymétrie — cinq formules de vibricien, pas une boîte noire.</li>
+    <li><strong>Fréquences de défaut.</strong> BPFO, BPFI, BSF, FTF sont calculées depuis la géométrie du roulement 6203 (fiche constructeur) pour l'analyse d'enveloppe — désactivée par défaut, car la sélection de bande s'est révélée instable (documenté).</li>
+    <li><strong>Décision.</strong> Une règle à seuil sur la kurtosis sert de référence ; XGBoost combine les cinq indicateurs.</li>
+    <li><strong>Restitution.</strong> MLflow trace chaque run avec le hash du jeu de données ; Streamlit et l'API exposent le diagnostic avec ses indicateurs.</li>
+  </ol>
+  <figure><img src="img/architecture-4.png" alt="Schéma : du signal aux indicateurs" loading="lazy" width="2254" height="880"><figcaption>Constat mesuré : sur ce banc, la kurtosis est plus <em>basse</em> sur les roulements défectueux ; le sens de la règle est appris, jamais supposé.</figcaption></figure>
+</div></section>
+
+<section id="evaluation"><div class="wrap stack">
+  <span class="eyebrow">Évaluation</span>
+  <h2>Les chiffres annoncés, reproduits sur cette machine</h2>
+  <p class="lead">Jeu complet téléchargé depuis la source officielle (université de Paderborn, 32 archives, 21 Go extraits), pipeline relancé de bout en bout. Validation croisée StratifiedGroupKFold, 5 folds, groupe = roulement.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Approche</th><th>Publié (README)</th><th>Mesuré ici</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td>Baseline seuil kurtosis</td><td class="num">0,682 ± 0,158</td><td class="num">0,682 ± 0,158</td><td class="ok">identique</td></tr>
+      <tr><td>Baseline facteur de crête</td><td class="num">0,576 ± 0,174</td><td class="num">0,576 ± 0,174</td><td class="ok">identique</td></tr>
+      <tr><td>Baseline RMS</td><td class="num">0,430 ± 0,090</td><td class="num">0,430 ± 0,090</td><td class="ok">identique</td></tr>
+      <tr><td>XGBoost vibration seule</td><td class="num">0,738 ± 0,208</td><td class="num">0,734 ± 0,206</td><td>écart 0,004</td></tr>
+      <tr><td>XGBoost fusion vibration + courant</td><td class="num">0,726 ± 0,222</td><td class="num">0,726 ± 0,219</td><td>écart-type 0,003</td></tr>
+      <tr><td>XGBoost courant seul</td><td class="num">0,542 ± 0,121</td><td class="num">0,550 ± 0,123</td><td>écart 0,008</td></tr>
+    </tbody>
+  </table></div>
+  <p>Les baselines (déterministes) sont reproduites au millième. Les petits écarts sur XGBoost viennent très probablement de la version de la bibliothèque (3.4.1 ici) ; ils sont dix fois plus petits que l'écart-type et ne changent aucune conclusion : <strong>le gain de XGBoost sur la règle simple n'est pas significatif</strong>, et le courant seul fait moins bien que la vibration.</p>
+
+  <h3 style="margin-top:34px">La question centrale : de l'artificiel au réel</h3>
+  <p>Mesure ajoutée dans cette session (<code>scripts/bench_vitrine.py</code>), sur les indicateurs temporels seuls. Entraînement sur les 12 roulements à défaut <strong>artificiel</strong> + 3 sains, test sur les 14 roulements à défaut <strong>réel</strong> + les 3 autres sains ; répété sur les 20 façons de répartir les 6 roulements sains. Contrôle : mêmes roulements sains, mais entraînement sur des défauts réels (CV groupée).</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Scénario (20 partitions)</th><th>F1 macro</th><th>Balanced accuracy</th><th>Rappel défauts</th><th>Rappel sains</th></tr></thead>
+    <tbody>
+      <tr><td>Artificiel → réel</td><td class="num">0,620 ± 0,102</td><td class="num">0,646 ± 0,109</td><td class="num">0,809 ± 0,098</td><td class="num">0,484 ± 0,229</td></tr>
+      <tr><td>Contrôle réel → réel</td><td class="num">0,694 ± 0,107</td><td class="num">0,690 ± 0,105</td><td class="num">0,930 ± 0,030</td><td class="num">0,449 ± 0,218</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Lecture : entraîné sur des défauts usinés, le modèle rate environ <strong>1 défaut réel sur 5</strong> (rappel 0,81), contre 1 sur 14 quand il a vu des défauts réels (0,93). Dans les deux cas, il reconnaît mal les roulements sains (rappel ≈ 0,45-0,48) : avec 6 roulements sains seulement, c'est la limite structurelle du jeu. Résultat exploratoire, non encore intégré à <code>docs/results_phase3.md</code> qui attend la validation du kurtogramme.</p>
+</div></section>
+
+<section id="architecture"><div class="wrap stack">
+  <span class="eyebrow">Architecture</span>
+  <h2>Du fichier .mat au diagnostic</h2>
+  <p class="lead">Schémas maintenus dans <code>docs/architecture.drawio</code> (4 pages), générés par <code>scripts/build_architecture_drawio.py</code> et exportés en PNG par la ligne de commande draw.io.</p>
+  <figure><img src="img/architecture-1.png" alt="Pipeline données et ML" loading="lazy" width="2330" height="880"><figcaption>Pipeline : source, ingestion, stockage PostgreSQL / TimescaleDB, indicateurs, modèles, suivi et restitution.</figcaption></figure>
+  <figure><img src="img/architecture-2.png" alt="Protocole d'évaluation" loading="lazy" width="2330" height="1016"><figcaption>Protocole d'évaluation et garde-fous inscrits dans le code.</figcaption></figure>
+</div></section>
+
+<section id="demarche"><div class="wrap stack">
+  <span class="eyebrow">Démarche</span>
+  <h2>Le journal de la mise en route</h2>
+  <p class="lead">Ce qui a été fait, constaté et corrigé en relançant le projet sur un poste Windows 11 (Ryzen 9 3900X, 32 Go, RTX 4070 Ti SUPER).</p>
+  <dl>
+    <dt>Données</dt><dd>32 archives officielles téléchargées et extraites (21 Go), ingestion complète en 473 s : 2 559 mesures, 7 677 signaux, 46 062 indicateurs. 1 fichier illisible dans l'archive KA08, écarté et signalé.</dd>
+    <dt>Base</dt><dd>Docker indisponible sur le poste : PostgreSQL 16 natif embarqué (<code>pgserver</code>). L'extension TimescaleDB y est absente ; <code>make_feature_hypertable()</code> plantait, il dégrade désormais proprement vers une table classique avec un avertissement.</dd>
+    <dt>Lint CI cassé</dt><dd>La version de ruff verrouillée (0.16.5) active 67 nouvelles règles par défaut : la CI échouait sans changement de code. Jeu de règles épinglé dans <code>pyproject.toml</code>.</dd>
+    <dt>Trois tests creux</dt><dd>Un test vérifiait <code>f(x) is None</code> sans <code>assert</code> (il ne testait rien) ; un autre attrapait n'importe quelle <code>Exception</code> ; le test d'intégration sur un vrai fichier .mat était ignoré sans condition. Corrigés : il s'exécute dès que les données sont présentes.</dd>
+    <dt>Image de service</dt><dd>En simulant l'image dans un environnement vierge, le chargement du modèle exigeait scikit-learn : le service utilise désormais le <code>Booster</code> natif de XGBoost, probabilités identiques.</dd>
+    <dt>Dashboard bloqué</dt><dd>L'adresse MLflow était codée en dur (<code>http://mlflow:5000</code>) dans deux onglets : hors Docker, les onglets Alertes et Résultats restaient vides. Ils lisent maintenant <code>MLFLOW_TRACKING_URI</code>.</dd>
+    <dt>Ajouts</dt><dd>API FastAPI + page de démo, export du modèle, banc artificiel → réel et temps d'inférence, <code>Dockerfile.api</code>, manifestes Kustomize, schémas draw.io, vidéo.</dd>
+    <dt>GPU</dt><dd>Testé et écarté : entraîner XGBoost sur 2 559 lignes × 5 indicateurs prend 154 ms sur CPU contre 365 ms sur GPU. À cette échelle, le transfert coûte plus que le calcul.</dd>
+  </dl>
+</div></section>
+
+<section id="kubernetes"><div class="wrap stack">
+  <span class="eyebrow">Production</span>
+  <h2>Une API sans état, prête pour un cluster</h2>
+  <p class="lead">Le modèle exporté (JSON XGBoost, 279 Ko) est embarqué dans l'image : pas de base ni de MLflow en production, mise à l'échelle horizontale immédiate.</p>
+  <figure><img src="img/architecture-3.png" alt="Déploiement Kubernetes" loading="lazy" width="2330" height="1016"><figcaption>Overlay <code>local</code> (1 réplica, NodePort) et <code>prod</code> (3 → 10 réplicas, HPA, Ingress TLS), rendus validés par <code>kubectl kustomize</code>.</figcaption></figure>
+  <div class="grid2">
+    <div class="card"><h3>Temps mesurés (CPU, sans réseau)</h3><ul>
+      <li>Indicateurs d'une mesure de 256 001 points : <strong>23 ms</strong> (médiane).</li>
+      <li>Prédiction XGBoost unitaire : <strong>0,9 ms</strong> ; 2 559 mesures en lot : 3,3 ms.</li>
+      <li>Appel <code>/predict</code> de bout en bout : <strong>317 ms</strong>, dominé par la lecture du JSON de 256 000 flottants.</li>
+    </ul></div>
+    <div class="card"><h3>Sécurité des pods</h3><ul>
+      <li>Utilisateur non root, système de fichiers en lecture seule, capacités retirées, seccomp.</li>
+      <li>NetworkPolicy : entrée sur le port HTTP uniquement, aucune sortie.</li>
+      <li>Sondes readiness / liveness sur <code>/health</code>, PodDisruptionBudget.</li>
+    </ul></div>
+  </div>
+  <p class="note">Non vérifié dans cette session : la construction de l'image Docker et un déploiement sur un vrai cluster (Docker Desktop arrêté sur le poste). Les manifestes sont validés par rendu Kustomize, l'API par exécution locale.</p>
+</div></section>
+
+<section id="limites"><div class="wrap stack">
+  <span class="eyebrow">Limites</span>
+  <h2>Ce que ces résultats ne disent pas</h2>
+  <div class="grid2">
+    <div class="card"><h3>Données</h3><ul>
+      <li>32 roulements d'un seul banc, un seul modèle (6203) : aucune garantie sur une autre machine.</li>
+      <li>6 roulements sains seulement : les écarts-types restent larges (0,10 à 0,21).</li>
+      <li>Licence CC BY-NC 4.0 : usage non commercial, citation obligatoire.</li>
+    </ul></div>
+    <div class="card"><h3>Méthode</h3><ul>
+      <li>Indicateurs temporels seuls ; l'enveloppe (BPFO / BPFI) attend la stabilisation du kurtogramme.</li>
+      <li>Régimes mélangés : la généralisation à un régime inconnu n'est pas encore testée.</li>
+      <li>Diagnostic sain / défaut uniquement, pas de localisation ni de durée de vie restante.</li>
+    </ul></div>
+  </div>
+</div></section>
+
+<section id="glossaire"><div class="wrap stack">
+  <span class="eyebrow">Glossaire</span>
+  <h2>Les mots du projet</h2>
+  <dl>
+    <dt>RMS</dt><dd>Moyenne quadratique du signal : l'énergie vibratoire globale.</dd>
+    <dt>Kurtosis</dt><dd>Mesure l'impulsivité : un signal à chocs a une kurtosis élevée (3 pour un bruit gaussien).</dd>
+    <dt>Facteur de crête</dt><dd>Pic divisé par RMS : sensible aux chocs isolés.</dd>
+    <dt>BPFO / BPFI</dt><dd>Fréquences auxquelles les billes frappent un défaut de bague extérieure / intérieure, calculées depuis la géométrie.</dd>
+    <dt>F1 macro</dt><dd>Moyenne du F1 de chaque classe : ne récompense pas un modèle qui dirait « défaut » à tout le monde.</dd>
+    <dt>CV groupée</dt><dd>Validation croisée où un roulement est entièrement en entraînement ou entièrement en test.</dd>
+    <dt>Défaut artificiel / réel</dt><dd>Usiné (électroérosion, gravure, perçage) contre né d'un vieillissement accéléré (pitting par fatigue).</dd>
+  </dl>
+</div></section>
+
+<section id="lancer"><div class="wrap stack">
+  <span class="eyebrow">Reproduire</span>
+  <h2>Lancer en local</h2>
+<pre>uv sync --all-extras
+bash scripts/download_paderborn.sh            # 5,4 Go d'archives officielles
+export DATABASE_URL=postgresql+psycopg2://...  # PostgreSQL ou TimescaleDB
+uv run python scripts/init_db.py
+uv run python scripts/build_dataset.py         # ~8 min, 32 roulements
+uv run python scripts/run_baseline.py && uv run python scripts/run_gbm.py
+uv run python scripts/export_model.py && uv run python scripts/bench_vitrine.py
+uv run uvicorn api.main:app --port 8765        # démo : http://127.0.0.1:8765</pre>
+  <p>Sans les données, l'API seule fonctionne avec le modèle déjà exporté : <code>docker build -f Dockerfile.api -t mlindustrial-api:1.0.0 .</code></p>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  Patrice Duclos — Analytics Engineer, Architecte IA. Données : Paderborn University KAt-DataCenter, Lessmeier et al. (2016), CC BY-NC 4.0.
+  Toutes les mesures de cette page ont été obtenues le 27/10/2026 ; détail dans <a href="https://github.com/PDUCLOS/MLindustrial/blob/main/docs/PORTFOLIO.md">docs/PORTFOLIO.md</a>.
+</div></footer>
+</body>
+</html>

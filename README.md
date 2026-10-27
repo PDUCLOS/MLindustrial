@@ -53,6 +53,16 @@ open http://localhost:8501
 
 ---
 
+## Vitrine, API de démo et mesures vérifiées
+
+- **Vitrine** : [`docs/index.html`](docs/index.html) (GitHub Pages) — vidéo, démo, évaluation, architecture.
+- **API de diagnostic** : `uv run uvicorn api.main:app --port 8765` puis http://127.0.0.1:8765 —
+  signal vibratoire brut → sain / défaut, avec 6 mesures réelles de roulements exclus de l'entraînement.
+  Image : `docker build -f Dockerfile.api -t mlindustrial-api:1.0.0 .` ; Kubernetes : `kubectl apply -k deploy/k8s/overlays/local`.
+- **Mesures reproduites et généralisation artificiel → réel** : [`docs/PORTFOLIO.md`](docs/PORTFOLIO.md)
+  (F1 macro 0,620 ± 0,102 de l'artificiel vers le réel, contre 0,694 ± 0,107 en contrôle réel → réel).
+- **Schémas** : [`docs/architecture.drawio`](docs/architecture.drawio), exports dans `docs/img/`.
+
 ## Démarrage rapide
 
 Pré-requis : Docker + Docker Compose.
