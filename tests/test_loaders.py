@@ -24,6 +24,7 @@ from src.data.loaders import (
     PADERBORN_CHANNELS,
     PADERBORN_SAMPLING_RATE_HZ,
     PADERBORN_SPEED_CHANNEL_NAME,
+    load_paderborn_measurement,
     parse_paderborn_filename,
     write_measurement_parquet,
 )
@@ -197,4 +198,16 @@ def test_load_paderborn_measurement_integration(tmp_path):
     Le canal speed est retourne separement (raster different) et n'est pas fusionne
     dans le dict des canaux principaux.
     """
-    pytest.skip("Test d'integration : necessite un .mat Paderborn reel")
+    mat = (
+        Path(__file__).resolve().parents[1]
+        / "data" / "raw" / "paderborn" / "K001" / "N15_M07_F10_K001_1.mat"
+    )
+    if not mat.exists():
+        pytest.skip("Test d'integration : necessite un .mat Paderborn reel (download_paderborn.sh)")
+    channels, acquired_at, speed = load_paderborn_measurement(mat)
+    assert set(channels) == {"vibration", "current_1", "current_2"}
+    n = {len(v) for v in channels.values()}
+    assert len(n) == 1 and n.pop() > 200_000  # 4 s a 64 kHz
+    assert all(np.isfinite(v).all() for v in channels.values())
+    assert acquired_at.year >= 2014
+    assert speed is not None and 1000 < float(np.median(speed)) < 2000  # N15 = 1500 tr/min

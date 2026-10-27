@@ -20,6 +20,7 @@ de fixtures synthétiques inutiles : on lit les vraies configs).
 
 from __future__ import annotations
 
+import dataclasses
 import subprocess
 import sys
 from pathlib import Path
@@ -113,7 +114,7 @@ class TestProperty:
     def test_property_est_immutable(self) -> None:
         """Une `Property` est `frozen=True` : pas de mutation apres construction."""
         p = Property(id_short="x", value_type="xs:string", value="v")
-        with pytest.raises(Exception):  # FrozenInstanceError en pratique
+        with pytest.raises(dataclasses.FrozenInstanceError):
             p.value = "nouvelle"  # type: ignore[misc]
 
     def test_default_confidence_est_confirmed(self) -> None:

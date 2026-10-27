@@ -39,7 +39,7 @@ def test_assert_no_asset_leakage_raises_on_overlap():
 def test_assert_no_asset_leakage_passes_when_disjoint():
     train_df = pd.DataFrame({"asset_id": ["a", "b"]})
     test_df = pd.DataFrame({"asset_id": ["c", "d"]})
-    assert_no_asset_leakage(train_df, test_df) is None
+    assert assert_no_asset_leakage(train_df, test_df) is None
 
 
 def test_split_cross_condition_disjoint_sessions():

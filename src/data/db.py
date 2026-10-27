@@ -253,9 +253,24 @@ class MaintenanceEvent(Base):
     asset = relationship("Asset")
 
 
-def make_feature_hypertable(engine) -> None:
-    """Convertit `feature` en hypertable Timescale (idempotent). A appeler apres init_db()."""
+def make_feature_hypertable(engine) -> bool:
+    """Convertit `feature` en hypertable Timescale (idempotent). A appeler apres init_db().
+
+    Si l'extension timescaledb n'est pas installee sur le serveur (PostgreSQL
+    natif, ex. poste Windows sans Docker), `feature` reste une table classique :
+    le schema est identique, seul le partitionnement temporel manque. Retourne
+    True si l'hypertable est active, False sinon (avertissement explicite).
+    """
     with engine.connect() as conn:
+        available = conn.execute(
+            text("SELECT 1 FROM pg_available_extensions WHERE name = 'timescaledb'")
+        ).first()
+        if available is None:
+            print(
+                "[warn] extension timescaledb absente : `feature` reste une table "
+                "PostgreSQL classique (pas d'hypertable)."
+            )
+            return False
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS timescaledb;"))
         conn.execute(
             text(
@@ -264,6 +279,7 @@ def make_feature_hypertable(engine) -> None:
             )
         )
         conn.commit()
+    return True
 
 
 def add_machine(session: Session, machine_id: str, zone: Zone | None = None, **kwargs) -> Machine:

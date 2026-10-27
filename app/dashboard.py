@@ -6,6 +6,7 @@ docs/data_model.md pour le schema, docs/known_issues.md pour les limites
 connues des features enveloppe, docs/results_phase2.md pour la baseline.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -607,7 +608,7 @@ with tab_baseline:
         st.dataframe(display_df, width="stretch")
 
     try:
-        mlflow.set_tracking_uri("http://mlflow:5000")
+        mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI", "http://mlflow:5000"))
 
         st.subheader("Baseline seuil (temporel, canal vibration)")
         show_experiment(

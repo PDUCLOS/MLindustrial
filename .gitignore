@@ -28,3 +28,7 @@ reports/drift/*.html
 
 .claude/
 CLAUDE.md
+
+# Generes localement (vitrine)
+data/promo/
+data/pgdata/

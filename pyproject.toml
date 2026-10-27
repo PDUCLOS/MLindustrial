@@ -50,6 +50,12 @@ markers = ["integration: tests necessitant une DB/service externe reelle"]
 line-length = 100
 extend-exclude = ["notebooks"]
 
+[tool.ruff.lint]
+# Jeu de regles explicite : les nouvelles versions de ruff (0.16, verrouillee
+# dans uv.lock) activent davantage de regles par defaut, ce qui faisait echouer
+# la CI sans changement de code. Base historique + bugbear (B015/B017).
+select = ["E4", "E7", "E9", "F", "B015", "B017"]
+
 [tool.ruff.lint.per-file-ignores]
 # sys.path.insert(...) avant les imports src.* : pattern volontaire de
 # bootstrap utilise par tous les scripts CLI (voir docs/brief_projet.md).

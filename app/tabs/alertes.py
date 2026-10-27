@@ -32,6 +32,7 @@ Mise a jour :
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import mlflow
@@ -56,7 +57,7 @@ from src.models.baseline import apply_threshold
 
 CONFIG: dict[str, Any] = {
     "mlflow": {
-        "tracking_uri": "http://mlflow:5000",
+        "tracking_uri": os.environ.get("MLFLOW_TRACKING_URI", "http://mlflow:5000"),
         "experiment": "baseline_threshold_cv",
         # Cle du run mlflow dont on lit le seuil. Aujourd'hui un seul
         # candidat raisonnable (kurtosis, F1 0.682 +/- 0.158) ; le menu
