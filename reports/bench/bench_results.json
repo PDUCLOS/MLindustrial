@@ -1,0 +1,65 @@
+{
+  "machine": "AMD64 Family 23 Model 113 Stepping 0, AuthenticAMD / 3.12.3",
+  "n_measurements": 2559,
+  "n_bearings": 32,
+  "generalization": {
+    "n_partitions": 20,
+    "n_test_measurements": 1360,
+    "n_train_measurements": 1199,
+    "artificial_to_real": {
+      "f1_macro": {
+        "mean": 0.6200891796799448,
+        "std": 0.10229729711547936
+      },
+      "balanced_accuracy": {
+        "mean": 0.6462946428571428,
+        "std": 0.10930082214959104
+      },
+      "recall_faulty": {
+        "mean": 0.8088392857142859,
+        "std": 0.097834044784408
+      },
+      "recall_healthy": {
+        "mean": 0.48374999999999996,
+        "std": 0.2291208287490831
+      }
+    },
+    "real_to_real_control": {
+      "f1_macro": {
+        "mean": 0.694288563452654,
+        "std": 0.10709440763003675
+      },
+      "balanced_accuracy": {
+        "mean": 0.6895535714285714,
+        "std": 0.10496755889893702
+      },
+      "recall_faulty": {
+        "mean": 0.9303571428571429,
+        "std": 0.030475086010492872
+      },
+      "recall_healthy": {
+        "mean": 0.44875,
+        "std": 0.21774610916284026
+      }
+    }
+  },
+  "inference": {
+    "signal_points": 256001,
+    "feature_extraction_ms_median": 23.222,
+    "xgb_predict_single_ms_median": 0.907,
+    "xgb_predict_batch": {
+      "rows": 2559,
+      "total_ms": 3.281
+    },
+    "api_predict_end_to_end_ms_median": 316.9,
+    "api_note": "TestClient in-process : inclut parsing JSON de 256 000 flottants, pas le reseau"
+  },
+  "training": {
+    "train_ms_mean_of_5": {
+      "cpu": 153.6,
+      "cuda": 364.9
+    },
+    "rows": 2559,
+    "features": 5
+  }
+}
